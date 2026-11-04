@@ -157,11 +157,9 @@
 // ===================== CONFIGURACIÓN =====================
 const API_URL = 'https://script.google.com/macros/s/AKfycbwHZm6XCRAMJoCJ9SgSAcVK8BYk64WKihs1Qq6lx5uI062qQIJYSgyD0gE2iBh8Qatv/exec'; // URL de la aplicación web de Apps Script
 
-const DEPOSITO = {
-  'PayPal':      { titulo: 'PayPal', lineas: [['Enviar a', 'juana107@gmail.com']] },
-  'Banco BHD':   { titulo: 'Banco BHD', lineas: [['Cuenta de ahorro', '11123600025'], ['A nombre de', 'Juana Paulino']] },
-  'Banreservas': { titulo: 'Banco de Reservas', lineas: [['Cuenta de ahorro', '3300464769'], ['A nombre de', 'Juana Paulino']] }
-};
+// Los datos para depositar (cuentas y cédula) NO están aquí: los envía el servidor
+// solo después de que la suscripción se completa.
+const TITULOS = { 'PayPal': 'PayPal', 'Banco BHD': 'Banco BHD', 'Banreservas': 'Banco de Reservas' };
 // =========================================================
 
 const $ = id => document.getElementById(id);
@@ -204,10 +202,10 @@ $('formulario').addEventListener('submit', async e => {
       r = await resp.json();
     } else {
       await new Promise(ok => setTimeout(ok, 700));
-      r = { ok: true };
+      r = { ok: true, deposito: { lineas: [['Modo demostración', 'Los datos reales aparecen al conectar el sistema']] } };
     }
     if (!r.ok) throw new Error(r.error || 'No se pudo completar el registro.');
-    mostrarExito(d);
+    mostrarExito(d, r.deposito);
   } catch (err) {
     mostrarError(err.message === 'Failed to fetch' ? 'No hay conexión. Inténtalo de nuevo.' : err.message);
   } finally {
@@ -215,21 +213,24 @@ $('formulario').addEventListener('submit', async e => {
   }
 });
 
-function mostrarExito(d){
+function mostrarExito(d, dep){
   $('formulario').style.display = 'none';
   $('exNombre').textContent = d.nombre.split(' ')[0];
   $('exMonto').textContent = 'RD$ ' + d.monto.toLocaleString('es-DO');
   $('exDia').textContent = d.dia;
-  $('exMetodo').textContent = DEPOSITO[d.metodo].titulo;
-  const dep = DEPOSITO[d.metodo];
+  $('exMetodo').textContent = TITULOS[d.metodo] || d.metodo;
   const cont = $('exDeposito');
   cont.innerHTML = '<h3><i class="fa-solid fa-building-columns"></i> Datos para depositar</h3>';
-  dep.lineas.forEach(([etq, val], i) => {
+  if (!dep || !Array.isArray(dep.lineas)) {
+    cont.innerHTML += '<p>Te enviamos los datos para depositar a tu correo.</p>';
+    $('exito').style.display = 'block'; window.scrollTo({ top: 0, behavior: 'smooth' }); return;
+  }
+  dep.lineas.forEach(([etq, val]) => {
     const fila = document.createElement('div'); fila.className = 'linea';
     const t = document.createElement('div'); t.innerHTML = '<small style="color:var(--suave)"></small><br><b></b>';
     t.querySelector('small').textContent = etq; t.querySelector('b').textContent = val;
     fila.appendChild(t);
-    if (i === 0) {
+    if (!/^a nombre de/i.test(etq) && !/^modo/i.test(etq)) {
       const b = document.createElement('button'); b.className = 'copiar'; b.type = 'button';
       b.innerHTML = '<i class="fa-regular fa-copy"></i> Copiar';
       b.onclick = () => navigator.clipboard.writeText(val).then(() => { b.innerHTML = '<i class="fa-solid fa-check"></i> Copiado'; });
@@ -237,6 +238,10 @@ function mostrarExito(d){
     }
     cont.appendChild(fila);
   });
+  if (dep.nota) {
+    const n = document.createElement('p'); n.className = 'ayuda'; n.style.marginTop = '8px';
+    n.innerHTML = '<i class="fa-solid fa-circle-info"></i> '; n.append(dep.nota); cont.appendChild(n);
+  }
   $('exito').style.display = 'block';
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
