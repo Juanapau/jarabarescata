@@ -54,6 +54,8 @@
   .deposito .linea:last-child{border-bottom:0}
   .copiar{border:0;background:var(--turquesa);color:#fff;border-radius:8px;padding:6px 10px;font:inherit;font-size:.8rem;font-weight:800;cursor:pointer;white-space:nowrap}
   .nota{font-size:.88rem;color:var(--suave);margin-top:14px}
+  .aviso-spam{display:flex;gap:10px;align-items:flex-start;text-align:left;background:#fff3df;border:1px solid #f6c98a;color:#7a4d0e;border-radius:12px;padding:12px 14px;margin-top:12px;font-size:.88rem;line-height:1.45}
+  .aviso-spam i{color:var(--naranja);font-size:1.1rem;margin-top:2px}
   footer{text-align:center;margin-top:22px;color:var(--suave);font-size:.9rem}
   footer a{color:var(--esmeralda);font-weight:800;text-decoration:none}
   body{-webkit-tap-highlight-color:transparent}
@@ -145,6 +147,10 @@
       </div>
       <div class="deposito" id="exDeposito"></div>
       <p class="nota"><i class="fa-solid fa-envelope-circle-check"></i> También te enviamos esta información a tu correo.</p>
+      <div class="aviso-spam">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <div><b>¿No ves nuestro correo?</b> Revisa tu carpeta de <b>Spam</b> o <b>Correo no deseado</b> (y en Gmail, también <b>Promociones</b>). Si lo encuentras ahí, márcalo como <b>"No es spam"</b> para recibir sin problema nuestros recordatorios y agradecimientos.</div>
+      </div>
     </section>
   </main>
 
