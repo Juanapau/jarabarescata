@@ -225,12 +225,18 @@ function mostrarExito(d, dep){
     cont.innerHTML += '<p>Te enviamos los datos para depositar a tu correo.</p>';
     $('exito').style.display = 'block'; window.scrollTo({ top: 0, behavior: 'smooth' }); return;
   }
-  dep.lineas.forEach(([etq, val]) => {
+  // Acepta pares [etiqueta, valor] o textos tipo "Cuenta de ahorro No. 123" / "A nombre de: Juana"
+  const par = l => {
+    if (Array.isArray(l)) return [String(l[0] ?? ''), String(l[1] ?? '')];
+    const m = String(l).match(/^(.*?(?:No\.|:))\s*(.+)$/);
+    return m ? [m[1].replace(/:$/, '').trim(), m[2].trim()] : ['', String(l)];
+  };
+  dep.lineas.map(par).forEach(([etq, val]) => {
     const fila = document.createElement('div'); fila.className = 'linea';
     const t = document.createElement('div'); t.innerHTML = '<small style="color:var(--suave)"></small><br><b></b>';
     t.querySelector('small').textContent = etq; t.querySelector('b').textContent = val;
     fila.appendChild(t);
-    if (!/^a nombre de/i.test(etq) && !/^modo/i.test(etq)) {
+    if (val && !/^a nombre de/i.test(etq) && !/^modo/i.test(etq)) {
       const b = document.createElement('button'); b.className = 'copiar'; b.type = 'button';
       b.innerHTML = '<i class="fa-regular fa-copy"></i> Copiar';
       b.onclick = () => navigator.clipboard.writeText(val).then(() => { b.innerHTML = '<i class="fa-solid fa-check"></i> Copiado'; });
