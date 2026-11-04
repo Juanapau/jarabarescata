@@ -91,7 +91,14 @@
           <option value="300">RD$ 300</option>
           <option value="400">RD$ 400</option>
           <option value="500">RD$ 500</option>
+          <option value="otra">Otra cantidad</option>
         </select>
+      </div>
+
+      <div class="campo" id="campoOtra" style="display:none">
+        <label for="montoOtra"><i class="fa-solid fa-pen"></i> Escribe el monto que deseas donar (RD$)</label>
+        <input id="montoOtra" name="montoOtra" type="number" inputmode="numeric" min="100" step="1" placeholder="Ej.: 1000">
+        <p class="ayuda">Monto mínimo: RD$ 100.</p>
       </div>
 
       <div class="campo">
@@ -148,6 +155,14 @@ const DEPOSITO = {
 
 const $ = id => document.getElementById(id);
 if (!API_URL) $('demo').style.display = 'block';
+const MONTO_MINIMO = 100;
+
+$('monto').addEventListener('change', () => {
+  const otra = $('monto').value === 'otra';
+  $('campoOtra').style.display = otra ? 'block' : 'none';
+  $('montoOtra').required = otra;
+  if (otra) $('montoOtra').focus(); else $('montoOtra').value = '';
+});
 
 function mostrarError(msg){ const a=$('alerta'); a.textContent=msg; a.classList.add('ver'); a.scrollIntoView({behavior:'smooth',block:'center'}); }
 
@@ -157,13 +172,15 @@ $('formulario').addEventListener('submit', async e => {
   const d = {
     nombre: $('nombre').value.trim().replace(/\s+/g,' '),
     correo: $('correo').value.trim().toLowerCase(),
-    monto: Number($('monto').value),
+    monto: $('monto').value === 'otra' ? Number($('montoOtra').value) : Number($('monto').value),
     dia: $('dia').value,
     metodo: $('metodo').value
   };
   if (d.nombre.split(' ').length < 2) return mostrarError('Escribe tu nombre completo (nombre y apellido).');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.correo)) return mostrarError('Revisa tu correo electrónico.');
-  if (!d.monto) return mostrarError('Selecciona la cantidad que donarás.');
+  if (!$('monto').value) return mostrarError('Selecciona la cantidad que donarás.');
+  if ($('monto').value === 'otra' && (!Number.isInteger(d.monto) || d.monto < MONTO_MINIMO))
+    return mostrarError('Escribe un monto válido, sin decimales, de al menos RD$ ' + MONTO_MINIMO + '.');
   if (!d.dia) return mostrarError('Selecciona el día para depositar.');
   if (!d.metodo) return mostrarError('Selecciona el método de pago.');
 
@@ -190,7 +207,7 @@ $('formulario').addEventListener('submit', async e => {
 function mostrarExito(d){
   $('formulario').style.display = 'none';
   $('exNombre').textContent = d.nombre.split(' ')[0];
-  $('exMonto').textContent = 'RD$ ' + d.monto;
+  $('exMonto').textContent = 'RD$ ' + d.monto.toLocaleString('es-DO');
   $('exDia').textContent = d.dia;
   $('exMetodo').textContent = DEPOSITO[d.metodo].titulo;
   const dep = DEPOSITO[d.metodo];
