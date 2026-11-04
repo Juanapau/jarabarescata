@@ -331,7 +331,7 @@ async function accion(action, data, msgOk) {
     const r = await api(action, data);
     if (!r.ok) throw new Error(r.error || 'No se pudo completar.');
     if (r.colaboradores) aplicarDatos(r);
-    if (msgOk) toast(msgOk);
+    if (r.aviso) toast(r.aviso, 4500); else if (msgOk) toast(msgOk);
     return r;
   } catch (e) {
     throw (e.message === 'Failed to fetch' ? new Error('Sin conexión con el servidor.') : e);
@@ -526,23 +526,53 @@ function vPagos() {
       <select style="width:auto" onchange="vPagos.filtro=this.value;vPagos()">
         ${['Todos', 'Atrasado', 'Pendiente', 'Parcial', 'Pagado', 'Pausado'].map(f => `<option ${f === filtro ? 'selected' : ''}>${f}</option>`).join('')}
       </select></h2>
+    ${avisoRemitente()}
     ${lista.length ? `<div class="tabla-cont"><table><thead><tr><th>Colaborador</th><th>Compromiso</th><th>Fecha límite</th><th>Método</th><th>Estado</th><th class="monto">Recibido</th><th></th></tr></thead><tbody>
     ${lista.map(x => `<tr>
       <td><b>${esc(x.c.Nombre)}</b><br><span class="ayuda">${esc(x.c.Correo)}</span></td>
       <td>${rd(x.c.Monto)}</td><td>${fechaCorta(x.vence)}</td><td>${esc(x.c.Metodo)}</td>
-      <td><span class="chip ${CHIP_PAGO[x.estado]}">${x.estado}</span></td>
+      <td><div><span class="chip ${CHIP_PAGO[x.estado]}">${x.estado}</span>${marcaCorreo(x.c.ID, m)}</div></td>
       <td class="monto">${x.pagado ? rd(x.pagado) : '—'}</td>
       <td><div class="acc">${x.estado !== 'Pagado' ? `<button class="btn btn-prim btn-mini" onclick="modalEntrada({colab:'${x.c.ID}',mes:'${m}'})"><i class="fa-solid fa-check"></i> Registrar pago</button>` : ''}
-        ${x.estado === 'Atrasado' || x.estado === 'Pendiente' ? `<a class="btn btn-sec btn-mini" title="Enviar recordatorio por correo" href="${recordatorio(x)}"><i class="fa-solid fa-envelope"></i></a>` : ''}</div></td>
+        ${x.estado === 'Atrasado' || x.estado === 'Pendiente' ? `<button class="btn btn-sec btn-mini" title="Enviar recordatorio por correo" onclick="modalRecordatorio('${x.c.ID}')"><i class="fa-solid fa-envelope"></i></button>` : ''}</div></td>
     </tr>`).join('')}</tbody></table></div>`
     : '<div class="vacio"><i class="fa-solid fa-users"></i>No hay colaboradores en esta lista.</div>'}
   </div>`;
 }
 
-function recordatorio(x) {
-  const asunto = 'Recordatorio amistoso · Círculo de Patitas 🐾';
-  const cuerpo = `Hola ${x.c.Nombre.split(' ')[0]},\n\nTe escribimos de JarabaRescata para recordarte con cariño tu aporte de ${rd(x.c.Monto)} correspondiente a ${nombreMes(E.mes)} (${x.c.DiaDeposito.toLowerCase()}), vía ${x.c.Metodo}.\n\nSi ya lo hiciste, ¡muchas gracias! Puedes responder este correo con tu comprobante.\n\nRescatamos vidas, sembramos esperanza.\nJarabaRescata`;
-  return 'mailto:' + encodeURIComponent(x.c.Correo) + '?subject=' + encodeURIComponent(asunto) + '&body=' + encodeURIComponent(cuerpo);
+// ---------- Correos (recordatorios y agradecimientos) ----------
+const CORREO_ESPERADO = 'juana107@gmail.com';
+const correoOk = c => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(c || ''));
+const correosDe = (id, m, tipo) => (E.datos.correos || []).filter(x => x.ColaboradorID === id && x.MesAporte === m && x.Tipo === tipo);
+
+function marcaCorreo(id, m) {
+  const g = correosDe(id, m, 'Agradecimiento'), r = correosDe(id, m, 'Recordatorio');
+  if (g.length) return `<br><span class="ayuda"><i class="fa-solid fa-heart" style="color:var(--esmeralda)"></i> Agradecido ${fechaCorta(g[g.length - 1].Fecha)}</span>`;
+  if (r.length) return `<br><span class="ayuda"><i class="fa-solid fa-envelope-circle-check" style="color:var(--turquesa)"></i> Recordado ${fechaCorta(r[r.length - 1].Fecha)}${r.length > 1 ? ' (' + r.length + ')' : ''}</span>`;
+  return '';
+}
+
+function avisoRemitente() {
+  const rem = (E.datos.remitente || '').toLowerCase();
+  if (rem && rem !== CORREO_ESPERADO) return `<div class="error-form"><i class="fa-solid fa-triangle-exclamation"></i> Los correos están saliendo desde <b>${esc(rem)}</b> y no desde ${CORREO_ESPERADO}. Vuelve a implementar el Apps Script con la cuenta ${CORREO_ESPERADO}.</div>`;
+  return `<p class="ayuda" style="margin:-4px 0 12px"><i class="fa-solid fa-paper-plane"></i> Los recordatorios y agradecimientos se envían desde <b>${esc(rem || CORREO_ESPERADO)}</b>.</p>`;
+}
+
+function modalRecordatorio(id) {
+  const c = E.datos.colaboradores.find(x => x.ID === id);
+  if (!c) return;
+  if (!correoOk(c.Correo)) return toast('Este colaborador no tiene correo registrado. Agrégalo en Colaboradores.', 4500);
+  const prev = correosDe(id, E.mes, 'Recordatorio');
+  abrirModal(`<h3>Enviar recordatorio</h3>
+  <p style="margin-bottom:10px">Se enviará un recordatorio amable a <b>${esc(c.Nombre)}</b> (${esc(c.Correo)}) por su aporte de <b>${rd(c.Monto)}</b> de ${nombreMes(E.mes)}, con los datos para depositar por ${esc(c.Metodo)}.</p>
+  ${prev.length ? `<p class="ayuda" style="margin-bottom:10px"><i class="fa-solid fa-circle-info"></i> Ya se le envió ${prev.length} recordatorio(s) este mes; el último el ${fechaCorta(prev[prev.length - 1].Fecha)}.</p>` : ''}
+  <p class="ayuda">Remitente: ${esc(E.datos.remitente || CORREO_ESPERADO)}</p>
+  <div class="error-form oculto" id="mErr" style="margin-top:10px"></div>
+  <div class="pie"><button type="button" class="btn btn-sec" onclick="cerrarModal()">Cancelar</button>
+  <button class="btn btn-prim" id="mEnviar"><i class="fa-solid fa-paper-plane"></i> Enviar recordatorio</button></div>`);
+  $('mEnviar').onclick = async () => {
+    try { await accion('enviarRecordatorio', { ColaboradorID: id, MesAporte: E.mes }); cerrarModal(); mostrar(E.vista); } catch (err) { errModal(err.message); }
+  };
 }
 
 // ===================== VISTA: COLABORADORES =====================
@@ -664,6 +694,9 @@ function modalEntrada(pre = {}) {
     <div class="campo col2" id="bColab"><label>Colaborador</label><select name="ColaboradorID" id="mColab"><option value="">Selecciona…</option>
       ${colabs.map(c => `<option value="${c.ID}" ${c.ID === pre.colab ? 'selected' : ''}>${esc(c.Nombre)} · ${rd(c.Monto)}</option>`).join('')}</select></div>
     <div class="campo col2" id="bMes"><label>Mes al que corresponde el aporte</label><input type="month" name="MesAporte" value="${pre.mes || E.mes}"></div>
+    <div class="campo col2" id="bGracias"><label style="display:flex;gap:10px;align-items:center;font-weight:700;cursor:pointer;background:var(--verde-claro);padding:10px 12px;border-radius:10px">
+      <input type="checkbox" name="enviarGracias" checked style="width:20px;height:20px;accent-color:var(--esmeralda);flex-shrink:0">
+      <span><i class="fa-solid fa-heart" style="color:var(--esmeralda)"></i> Enviar correo de agradecimiento al colaborador</span></label></div>
     <div class="campo col2 oculto" id="bDe"><label>Donante o actividad (opcional)</label><input name="Colaborador" placeholder="Ej.: Rifa de diciembre, donante anónimo…"></div>
     <div class="campo"><label>Monto recibido (RD$)</label><input type="number" name="Monto" id="mMonto" min="1" step="0.01" value="${c0 ? c0.Monto : ''}" required></div>
     <div class="campo"><label>Método</label><select name="Metodo" id="mMetodo">${opts(METODOS, c0 ? c0.Metodo : 'Banco BHD')}</select></div>
@@ -672,7 +705,7 @@ function modalEntrada(pre = {}) {
     <div class="campo col2"><label>Nota</label><textarea name="Nota" placeholder="Ej.: PayPal descontó comisión, se registra el monto neto."></textarea></div>
   </div>
   <div class="pie"><button type="button" class="btn btn-sec" onclick="cerrarModal()">Cancelar</button><button class="btn btn-prim"><i class="fa-solid fa-floppy-disk"></i> Guardar entrada</button></div></form>`);
-  const ajustar = () => { const ap = $('mTipo').value === 'Aporte Círculo'; $('bColab').classList.toggle('oculto', !ap); $('bMes').classList.toggle('oculto', !ap); $('bDe').classList.toggle('oculto', ap); };
+  const ajustar = () => { const ap = $('mTipo').value === 'Aporte Círculo'; $('bColab').classList.toggle('oculto', !ap); $('bMes').classList.toggle('oculto', !ap); $('bGracias').classList.toggle('oculto', !ap); $('bDe').classList.toggle('oculto', ap); };
   $('mTipo').onchange = ajustar; ajustar();
   $('mColab').onchange = () => { const c = E.datos.colaboradores.find(x => x.ID === $('mColab').value); if (c) { $('mMonto').value = c.Monto; $('mMetodo').value = c.Metodo; } };
   $('fM').onsubmit = e => enviarMovimiento(e, 'registrarEntrada', 'Entrada registrada');
@@ -703,8 +736,9 @@ async function enviarMovimiento(e, act, ok) {
   const arch = fd.get('archivo');
   try {
     if (arch && arch.size) d.archivo = await prepararArchivo(arch);
-    await accion(act, d, ok); cerrarModal();
-    const nuevoMes = String(d.Fecha).slice(0, 7); if (nuevoMes !== E.mes) { E.mes = nuevoMes; toast(ok + ' en ' + nombreMes(nuevoMes)); }
+    const r = await accion(act, d, ok); cerrarModal();
+    const nuevoMes = String(d.Fecha).slice(0, 7);
+    if (nuevoMes !== E.mes && E.vista !== 'pagos') { E.mes = nuevoMes; if (!r.aviso) toast(ok + ' en ' + nombreMes(nuevoMes)); }
     mostrar(E.vista);
   } catch (err) { errModal(err.message); }
 }
@@ -920,14 +954,15 @@ const DEMO = (() => {
     S('S-2', p + '-22', 'Vacunas', 'Vacuna múltiple para 2 cachorros', 'Clínica veterinaria', 900),
     S('S-3', m + '-03', 'Esterilización', 'Esterilización de perrita rescatada', 'Clínica veterinaria', 1200)
   ];
-  return { hoy: h, colaboradores, entradas, salidas, bitacora: [{ Fecha: h + ' 08:00', Usuario: 'demo', Accion: 'Inicio de sesión', Detalle: '' }],
+  return { hoy: h, colaboradores, entradas, salidas, correos: [], bitacora: [{ Fecha: h + ' 08:00', Usuario: 'demo', Accion: 'Inicio de sesión', Detalle: '' }],
     usuarios: [{ usuario: 'juana', nombre: 'Juana Paulino', rol: 'Administrador', estado: 'Activo', fecha: p + '-01' }] };
 })();
 
 async function demoApi(action, d) {
   await new Promise(r => setTimeout(r, 250));
   const D = DEMO, ses = { usuario: 'juana', nombre: 'Juana Paulino (demo)', rol: 'Administrador' };
-  const todo = () => ({ ok: true, sesion: ses, hoy: D.hoy, colaboradores: D.colaboradores, entradas: D.entradas, salidas: D.salidas, bitacora: D.bitacora });
+  const todo = (aviso) => ({ ok: true, sesion: ses, hoy: D.hoy, colaboradores: D.colaboradores, entradas: D.entradas, salidas: D.salidas, bitacora: D.bitacora, correos: D.correos, remitente: 'juana107@gmail.com', aviso });
+  const ahora = D.hoy + ' ' + new Date().toTimeString().slice(0, 5);
   const id = p => p + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();
   switch (action) {
     case 'estado': return { ok: true, hayUsuarios: true };
@@ -942,7 +977,13 @@ async function demoApi(action, d) {
       const c = D.colaboradores.find(x => x.ID === d.ColaboradorID);
       if (d.Tipo === 'Aporte Círculo' && !c) return { ok: false, error: 'Selecciona el colaborador.' };
       D.entradas.push({ ...d, ID: id('E'), Monto: +d.Monto, Colaborador: c ? c.Nombre : d.Colaborador, ColaboradorID: c ? c.ID : '', MesAporte: c ? d.MesAporte : '', Comprobante: d.archivo ? '#' : '', Estado: 'Activa', FechaRegistro: D.hoy + ' 23:59' });
+      if (c && d.enviarGracias === 'on') { D.correos.push({ Fecha: ahora, Tipo: 'Agradecimiento', ColaboradorID: c.ID, MesAporte: d.MesAporte }); return todo('Entrada registrada y agradecimiento enviado a ' + c.Correo + ' (demo)'); }
       return todo();
+    }
+    case 'enviarRecordatorio': {
+      const c = D.colaboradores.find(x => x.ID === d.ColaboradorID);
+      D.correos.push({ Fecha: ahora, Tipo: 'Recordatorio', ColaboradorID: c.ID, MesAporte: d.MesAporte });
+      return todo('Recordatorio enviado a ' + c.Correo + ' (demo)');
     }
     case 'registrarSalida':
       D.salidas.push({ ...d, ID: id('S'), Monto: +d.Monto, Factura: d.archivo ? '#' : '', Estado: 'Activa', FechaRegistro: D.hoy + ' 23:59' }); return todo();
