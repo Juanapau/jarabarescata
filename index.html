@@ -243,6 +243,7 @@ body{-webkit-tap-highlight-color:transparent}
     <nav id="menu">
       <button data-vista="resumen" class="activo"><i class="fa-solid fa-chart-pie"></i> Resumen</button>
       <button data-vista="pagos"><i class="fa-solid fa-calendar-check"></i> Control de pagos</button>
+      <button data-vista="donaciones"><i class="fa-solid fa-hand-holding-heart"></i> Donaciones únicas</button>
       <button data-vista="colaboradores"><i class="fa-solid fa-users"></i> Colaboradores</button>
       <button data-vista="entradas"><i class="fa-solid fa-arrow-down"></i> Entradas</button>
       <button data-vista="salidas"><i class="fa-solid fa-arrow-up"></i> Salidas</button>
@@ -400,7 +401,7 @@ function aplicarDatos(r) { E.datos = r; if (r.sesion) E.sesion = r.sesion; }
 async function recargar() { try { await accion('datos', {}, 'Datos actualizados'); mostrar(E.vista); } catch (e) { toast(e.message); } }
 
 // ===================== NAVEGACIÓN =====================
-const TITULOS = { resumen: 'Resumen', pagos: 'Control de pagos', colaboradores: 'Colaboradores', entradas: 'Entradas', salidas: 'Salidas', informes: 'Informes', usuarios: 'Usuarios' };
+const TITULOS = { resumen: 'Resumen', pagos: 'Control de pagos', donaciones: 'Donaciones únicas', colaboradores: 'Colaboradores', entradas: 'Entradas', salidas: 'Salidas', informes: 'Informes', usuarios: 'Usuarios' };
 $('menu').addEventListener('click', e => { const b = e.target.closest('button'); if (b) mostrar(b.dataset.vista); });
 
 function moverMes(d) {
@@ -416,7 +417,7 @@ function mostrar(v) {
   $('tituloVista').textContent = TITULOS[v];
   $('txtMes').textContent = nombreMes(E.mes);
   $('selMes').style.visibility = (v === 'colaboradores' || v === 'usuarios') ? 'hidden' : 'visible';
-  ({ resumen: vResumen, pagos: vPagos, colaboradores: vColaboradores, entradas: vEntradas, salidas: vSalidas, informes: vInformes, usuarios: vUsuarios })[v]();
+  ({ resumen: vResumen, pagos: vPagos, donaciones: vDonaciones, colaboradores: vColaboradores, entradas: vEntradas, salidas: vSalidas, informes: vInformes, usuarios: vUsuarios })[v]();
   window.scrollTo(0, 0);
 }
 
@@ -462,6 +463,8 @@ function vResumen() {
   const pagados = esperados.filter(x => x.estado === 'Pagado').length;
   const pct = esperados.length ? Math.round(pagados / esperados.length * 100) : 0;
   const aportesMes = suma(activas(E.datos.entradas).filter(x => x.Tipo === 'Aporte Círculo' && x.MesAporte === m));
+  const unicasMes = delMes(activas(E.datos.entradas), m).filter(x => x.Tipo === 'Donación única');
+  const donPend = (E.datos.donaciones || []).filter(x => x.Estado === 'Pendiente');
 
   const cats = {}; delMes(activas(E.datos.salidas), m).forEach(s => cats[s.Categoria] = (cats[s.Categoria] || 0) + Number(s.Monto));
   const catOrden = Object.entries(cats).sort((a, b) => b[1] - a[1]); const max = catOrden.length ? catOrden[0][1] : 1;
@@ -471,7 +474,7 @@ function vResumen() {
 
   $('vista').innerHTML = `
   <div class="kpis">
-    <div class="kpi k-ent"><i class="fa-solid fa-circle-arrow-down fondo"></i><small>Entradas del mes</small><b style="color:var(--esmeralda)">${rd(b.entradas)}</b><span class="det">Aportes del Círculo: ${rd(aportesMes)}</span></div>
+    <div class="kpi k-ent"><i class="fa-solid fa-circle-arrow-down fondo"></i><small>Entradas del mes</small><b style="color:var(--esmeralda)">${rd(b.entradas)}</b><span class="det">Círculo: ${rd(aportesMes)} · Únicas: ${rd(suma(unicasMes))}</span></div>
     <div class="kpi k-sal"><i class="fa-solid fa-circle-arrow-up fondo"></i><small>Salidas del mes</small><b style="color:var(--naranja-osc)">${rd(b.salidas)}</b><span class="det">${delMes(activas(E.datos.salidas), m).length} gastos registrados</span></div>
     <div class="kpi k-bal"><i class="fa-solid fa-scale-balanced fondo"></i><small>Balance del mes</small><b style="color:${b.balanceMes < 0 ? 'var(--rojo)' : 'var(--turquesa)'}">${rd(b.balanceMes)}</b><span class="det">Entradas − salidas</span></div>
     <div class="kpi k-acu"><i class="fa-solid fa-piggy-bank fondo"></i><small>Saldo disponible</small><b>${rd(b.saldoFinal)}</b><span class="det">Al cierre de ${nombreMes(m)}</span></div>
@@ -494,6 +497,11 @@ function vResumen() {
     </div>
   </div>
   <div class="panel">
+    <h2>Donaciones únicas <button class="btn btn-sec btn-mini" onclick="mostrar('donaciones')"><i class="fa-solid fa-hand-holding-heart"></i> Ver donaciones</button></h2>
+    <p>Recibido en ${nombreMes(m)}: <b>${rd(suma(unicasMes))}</b> (${unicasMes.length} donación${unicasMes.length === 1 ? '' : 'es'})
+      · Por confirmar: <b>${donPend.length}</b>${donPend.length ? ' (' + rd(suma(donPend)) + ')' : ''}</p>
+  </div>
+  <div class="panel">
     <h2>Últimos movimientos del mes</h2>
     ${movs.length ? `<div class="tabla-cont"><table><thead><tr><th>Fecha</th><th>Tipo</th><th>Detalle</th><th class="monto">Monto</th></tr></thead><tbody>
     ${movs.map(x => `<tr><td>${fechaCorta(x.Fecha)}</td>
@@ -502,6 +510,61 @@ function vResumen() {
       <td class="monto" style="color:${x._t === 'E' ? 'var(--esmeralda)' : 'var(--naranja-osc)'}">${x._t === 'E' ? '+' : '−'} ${rd(x.Monto)}</td></tr>`).join('')}
     </tbody></table></div>` : '<div class="vacio"><i class="fa-solid fa-paw"></i>Todavía no hay movimientos en este mes.</div>'}
   </div>`;
+}
+
+// ===================== VISTA: DONACIONES ÚNICAS =====================
+const CHIP_DON = { Pendiente: 'c-gris', Recibida: 'c-verde', 'No llegó': 'c-rojo' };
+const FILTROS_DON = ['Del mes', 'Pendiente', 'Recibida', 'No llegó', 'Pendientes (todos los meses)'];
+function vDonaciones() {
+  const m = E.mes, todas = E.datos.donaciones || [];
+  const filtro = vDonaciones.filtro || 'Del mes';
+  const delM = todas.filter(x => String(x.FechaRegistro).slice(0, 7) === m);
+  const lista = (filtro === 'Pendientes (todos los meses)' ? todas.filter(x => x.Estado === 'Pendiente')
+    : delM.filter(x => filtro === 'Del mes' || x.Estado === filtro))
+    .slice().sort((a, b) => String(b.FechaRegistro).localeCompare(String(a.FechaRegistro)));
+  const recibidas = delMes(activas(E.datos.entradas), m).filter(x => x.Tipo === 'Donación única');
+  const pend = todas.filter(x => x.Estado === 'Pendiente');
+  const gracias = id => (E.datos.correos || []).filter(c => c.Tipo === 'Agradecimiento' && c.ColaboradorID === id);
+
+  $('vista').innerHTML = `
+  <div class="kpis">
+    <div class="kpi"><small>Registradas en el mes</small><b>${delM.length}</b><span class="det">Prometido: ${rd(suma(delM))}</span></div>
+    <div class="kpi"><small>Recibido en el mes</small><b style="color:var(--esmeralda)">${rd(suma(recibidas))}</b><span class="det">${recibidas.length} donación${recibidas.length === 1 ? '' : 'es'} confirmada${recibidas.length === 1 ? '' : 's'}</span></div>
+    <div class="kpi"><small>Por confirmar</small><b style="color:var(--naranja-osc)">${pend.length}</b><span class="det">${rd(suma(pend))} de todos los meses</span></div>
+  </div>
+  <div class="panel">
+    <h2>Donaciones de ${filtro === 'Pendientes (todos los meses)' ? 'todos los meses' : nombreMes(m)}
+      <select style="width:auto" onchange="vDonaciones.filtro=this.value;vDonaciones()">${FILTROS_DON.map(f => `<option ${f === filtro ? 'selected' : ''}>${f}</option>`).join('')}</select></h2>
+    <p class="ayuda" style="margin:-4px 0 12px">Cuando el dinero llegue, toca <b>Registrar recibido</b>: se crea la entrada y se envía el agradecimiento.</p>
+    ${lista.length ? `<div class="tabla-cont"><table><thead><tr><th>Donante</th><th>Registro</th><th>Método</th><th>Estado</th><th class="monto">Monto</th><th></th></tr></thead><tbody>
+    ${lista.map(x => { const anon = x.Anonimo === 'Sí', g = gracias(x.ID); return `<tr>
+      <td><b>${anon ? 'Anónimo' : esc(x.Nombre)}</b>${anon ? ' <span class="chip c-turq">Anónima</span>' : ''}<br><span class="ayuda">${esc(x.Correo)}</span></td>
+      <td>${fechaCorta(x.FechaRegistro)}</td><td>${esc(x.Metodo)}</td>
+      <td><div><span class="chip ${CHIP_DON[x.Estado] || 'c-gris'}">${esc(x.Estado)}</span>${x.Estado === 'Recibida' ? `<br><span class="ayuda">${fechaCorta(x.FechaRecibida)}${g.length ? ' · <i class="fa-solid fa-heart" style="color:var(--esmeralda)"></i> Agradecido' : ''}</span>` : ''}</div></td>
+      <td class="monto">${rd(x.Monto)}</td>
+      <td><div class="acc">${x.Estado === 'Pendiente' ? `
+        <button class="btn btn-prim btn-mini" onclick="modalEntrada({donacion:'${esc(x.ID)}'})"><i class="fa-solid fa-check"></i> Registrar recibido</button>
+        <button class="btn btn-sec btn-mini" title="Marcar que no llegó" onclick="modalNoLlego('${esc(x.ID)}')"><i class="fa-solid fa-xmark"></i></button>`
+        : x.Estado === 'No llegó' ? `<button class="btn btn-sec btn-mini" onclick="marcarDon('${esc(x.ID)}','Pendiente')"><i class="fa-solid fa-rotate-left"></i> Reabrir</button>` : ''}</div></td>
+    </tr>`; }).join('')}</tbody></table></div>`
+    : '<div class="vacio"><i class="fa-solid fa-hand-holding-heart"></i>No hay donaciones con este filtro.</div>'}
+  </div>`;
+}
+
+function modalNoLlego(id) {
+  const x = (E.datos.donaciones || []).find(d => d.ID === id); if (!x) return;
+  abrirModal(`<h3>Marcar como "No llegó"</h3>
+  <p style="margin-bottom:12px">La donación de <b>${x.Anonimo === 'Sí' ? 'Anónimo' : esc(x.Nombre)}</b> por <b>${rd(x.Monto)}</b> quedará marcada como no recibida. Podrás reabrirla si luego llega el depósito.</p>
+  <div class="error-form oculto" id="mErr"></div>
+  <form id="fM"><div class="campo"><label>Nota (opcional)</label><input name="nota" placeholder="Ej.: Se le escribió y no respondió"></div>
+  <div class="pie"><button type="button" class="btn btn-sec" onclick="cerrarModal()">Cancelar</button><button class="btn btn-peligro"><i class="fa-solid fa-xmark"></i> Marcar "No llegó"</button></div></form>`);
+  $('fM').onsubmit = async e => {
+    e.preventDefault();
+    try { await accion('marcarDonacion', { ID: id, estado: 'No llegó', nota: e.target.nota.value }, 'Donación marcada como no recibida'); cerrarModal(); mostrar(E.vista); } catch (err) { errModal(err.message); }
+  };
+}
+async function marcarDon(id, estado) {
+  try { await accion('marcarDonacion', { ID: id, estado }, 'Donación reabierta'); mostrar(E.vista); } catch (e) { toast(e.message); }
 }
 
 // ===================== VISTA: CONTROL DE PAGOS =====================
@@ -571,7 +634,7 @@ function modalRecordatorio(id) {
   <div class="pie"><button type="button" class="btn btn-sec" onclick="cerrarModal()">Cancelar</button>
   <button class="btn btn-prim" id="mEnviar"><i class="fa-solid fa-paper-plane"></i> Enviar recordatorio</button></div>`);
   $('mEnviar').onclick = async () => {
-    try { await accion('enviarRecordatorio', { ColaboradorID: id, MesAporte: E.mes }); cerrarModal(); mostrar(E.vista); } catch (err) { errModal(err.message); }
+    try { await accion('enviarRecordatorio', { ColaboradorID: id, ColaboradorNombre: c.Nombre, MesAporte: E.mes }); cerrarModal(); mostrar(E.vista); } catch (err) { errModal(err.message); }
   };
 }
 
@@ -685,28 +748,43 @@ function modalEntrada(pre = {}) {
   const hoy = E.datos.hoy || hoyLocal();
   const colabs = E.datos.colaboradores.filter(c => c.Estado !== 'Baja' || c.ID === pre.colab).sort((a, b) => a.Nombre.localeCompare(b.Nombre));
   const c0 = colabs.find(c => c.ID === pre.colab);
+  const donsPend = (E.datos.donaciones || []).filter(x => x.Estado === 'Pendiente' || x.ID === pre.donacion);
+  const d0 = donsPend.find(x => x.ID === pre.donacion);
+  const nomDon = x => (x.Anonimo === 'Sí' ? 'Anónimo' : x.Nombre);
   const fechaDef = hoy.slice(0, 7) === E.mes ? hoy : (E.mes < hoy.slice(0, 7) ? finDeMes(E.mes) : E.mes + '-01');
   abrirModal(`<h3>Registrar entrada</h3>
   <div class="error-form oculto" id="mErr"></div>
   <form id="fM"><div class="grid">
-    <div class="campo"><label>Tipo</label><select name="Tipo" id="mTipo">${opts(TIPOS_ENTRADA, pre.colab ? 'Aporte Círculo' : 'Aporte Círculo')}</select></div>
+    <div class="campo"><label>Tipo</label><select name="Tipo" id="mTipo">${opts(TIPOS_ENTRADA, d0 ? 'Donación única' : 'Aporte Círculo')}</select></div>
     <div class="campo"><label>Fecha del depósito</label><input type="date" name="Fecha" value="${fechaDef}" required></div>
     <div class="campo col2" id="bColab"><label>Colaborador</label><select name="ColaboradorID" id="mColab"><option value="">Selecciona…</option>
-      ${colabs.map(c => `<option value="${c.ID}" ${c.ID === pre.colab ? 'selected' : ''}>${esc(c.Nombre)} · ${rd(c.Monto)}</option>`).join('')}</select></div>
+      ${colabs.map(c => `<option value="${esc(c.ID)}" data-nombre="${esc(c.Nombre)}" ${c.ID === pre.colab ? 'selected' : ''}>${esc(c.Nombre)} · ${rd(c.Monto)}</option>`).join('')}</select></div>
     <div class="campo col2" id="bMes"><label>Mes al que corresponde el aporte</label><input type="month" name="MesAporte" value="${pre.mes || E.mes}"></div>
+    <div class="campo col2 oculto" id="bDon"><label>Donación registrada en el formulario</label><select name="DonacionID" id="mDon">
+      <option value="">— Sin vincular (donación directa) —</option>
+      ${donsPend.map(x => `<option value="${esc(x.ID)}" ${x.ID === pre.donacion ? 'selected' : ''}>${esc(nomDon(x))} · ${rd(x.Monto)} · ${fechaCorta(x.FechaRegistro)}</option>`).join('')}</select>
+      <p class="ayuda">Si la persona llenó el formulario, elígela aquí: quedará como recibida y se le enviará el agradecimiento.</p></div>
     <div class="campo col2" id="bGracias"><label style="display:flex;gap:10px;align-items:center;font-weight:700;cursor:pointer;background:var(--verde-claro);padding:10px 12px;border-radius:10px">
       <input type="checkbox" name="enviarGracias" checked style="width:20px;height:20px;accent-color:var(--esmeralda);flex-shrink:0">
-      <span><i class="fa-solid fa-heart" style="color:var(--esmeralda)"></i> Enviar correo de agradecimiento al colaborador</span></label></div>
+      <span><i class="fa-solid fa-heart" style="color:var(--esmeralda)"></i> Enviar correo de agradecimiento al <span id="txtGracias">colaborador</span></span></label></div>
     <div class="campo col2 oculto" id="bDe"><label>Donante o actividad (opcional)</label><input name="Colaborador" placeholder="Ej.: Rifa de diciembre, donante anónimo…"></div>
-    <div class="campo"><label>Monto recibido (RD$)</label><input type="number" name="Monto" id="mMonto" min="1" step="0.01" value="${c0 ? c0.Monto : ''}" required></div>
-    <div class="campo"><label>Método</label><select name="Metodo" id="mMetodo">${opts(METODOS, c0 ? c0.Metodo : 'Banco BHD')}</select></div>
+    <div class="campo"><label>Monto recibido (RD$)</label><input type="number" name="Monto" id="mMonto" min="1" step="0.01" value="${c0 ? c0.Monto : d0 ? d0.Monto : ''}" required></div>
+    <div class="campo"><label>Método</label><select name="Metodo" id="mMetodo">${opts(METODOS, c0 ? c0.Metodo : d0 ? d0.Metodo : 'Banco BHD')}</select></div>
     <div class="campo col2"><label>No. de referencia o transacción</label><input name="Referencia"></div>
     ${campoArchivo('Comprobante')}
     <div class="campo col2"><label>Nota</label><textarea name="Nota" placeholder="Ej.: PayPal descontó comisión, se registra el monto neto."></textarea></div>
   </div>
   <div class="pie"><button type="button" class="btn btn-sec" onclick="cerrarModal()">Cancelar</button><button class="btn btn-prim"><i class="fa-solid fa-floppy-disk"></i> Guardar entrada</button></div></form>`);
-  const ajustar = () => { const ap = $('mTipo').value === 'Aporte Círculo'; $('bColab').classList.toggle('oculto', !ap); $('bMes').classList.toggle('oculto', !ap); $('bGracias').classList.toggle('oculto', !ap); $('bDe').classList.toggle('oculto', ap); };
+  const ajustar = () => {
+    const ap = $('mTipo').value === 'Aporte Círculo', un = $('mTipo').value === 'Donación única', vinc = un && $('mDon').value !== '';
+    $('bColab').classList.toggle('oculto', !ap); $('bMes').classList.toggle('oculto', !ap);
+    $('bDon').classList.toggle('oculto', !un || !donsPend.length);
+    $('bDe').classList.toggle('oculto', ap || vinc);
+    $('bGracias').classList.toggle('oculto', !(ap || vinc));
+    $('txtGracias').textContent = ap ? 'colaborador' : 'donante';
+  };
   $('mTipo').onchange = ajustar; ajustar();
+  $('mDon').onchange = () => { const x = donsPend.find(v => v.ID === $('mDon').value); if (x) { $('mMonto').value = x.Monto; $('mMetodo').value = x.Metodo; } ajustar(); };
   $('mColab').onchange = () => { const c = E.datos.colaboradores.find(x => x.ID === $('mColab').value); if (c) { $('mMonto').value = c.Monto; $('mMetodo').value = c.Metodo; } };
   $('fM').onsubmit = e => enviarMovimiento(e, 'registrarEntrada', 'Entrada registrada');
 }
@@ -733,12 +811,14 @@ function modalSalida() {
 async function enviarMovimiento(e, act, ok) {
   e.preventDefault();
   const fd = new FormData(e.target), d = Object.fromEntries(fd); delete d.archivo;
+  const op = $('mColab') && $('mColab').selectedOptions[0];
+  if (op && op.dataset.nombre) d.ColaboradorNombre = op.dataset.nombre;
   const arch = fd.get('archivo');
   try {
     if (arch && arch.size) d.archivo = await prepararArchivo(arch);
     const r = await accion(act, d, ok); cerrarModal();
     const nuevoMes = String(d.Fecha).slice(0, 7);
-    if (nuevoMes !== E.mes && E.vista !== 'pagos') { E.mes = nuevoMes; if (!r.aviso) toast(ok + ' en ' + nombreMes(nuevoMes)); }
+    if (nuevoMes !== E.mes && E.vista !== 'pagos' && E.vista !== 'donaciones') { E.mes = nuevoMes; if (!r.aviso) toast(ok + ' en ' + nombreMes(nuevoMes)); }
     mostrar(E.vista);
   } catch (err) { errModal(err.message); }
 }
@@ -945,7 +1025,7 @@ const DEMO = (() => {
     En('E-2', p + '-15', 'Aporte Círculo', 'C-3', 'Ana Lucía Fernández', p, 380, 'PayPal'),
     En('E-3', p + '-15', 'Aporte Círculo', 'C-4', 'Pedro Almonte', p, 300, 'Banreservas'),
     En('E-4', p + '-28', 'Aporte Círculo', 'C-2', 'Carlos Méndez', p, 300, 'Banreservas'),
-    En('E-5', p + '-20', 'Donación única', '', 'Donante anónimo', '', 1500, 'Efectivo'),
+    En('E-5', p + '-20', 'Donación única', 'D-3', 'Anónimo', '', 1500, 'Banco BHD'),
     En('E-6', m + '-02', 'Aporte Círculo', 'C-1', 'María Rodríguez Peña', m, 500, 'Banco BHD')
   ];
   const S = (id, f, c, d, pr, mo) => ({ ID: id, Fecha: f, Categoria: c, Proveedor: pr, Descripcion: d, Monto: mo, Metodo: 'Efectivo', Factura: '', Nota: '', Estado: 'Activa', RegistradoPor: 'demo', FechaRegistro: f + ' 12:00' });
@@ -954,14 +1034,20 @@ const DEMO = (() => {
     S('S-2', p + '-22', 'Vacunas', 'Vacuna múltiple para 2 cachorros', 'Clínica veterinaria', 900),
     S('S-3', m + '-03', 'Esterilización', 'Esterilización de perrita rescatada', 'Clínica veterinaria', 1200)
   ];
-  return { hoy: h, colaboradores, entradas, salidas, correos: [], bitacora: [{ Fecha: h + ' 08:00', Usuario: 'demo', Accion: 'Inicio de sesión', Detalle: '' }],
+  const Dn = (id, f, n, an, c, mo, me, es, en = '', fr = '') => ({ ID: id, FechaRegistro: f, Nombre: n, Anonimo: an, Correo: c, Monto: mo, Metodo: me, Estado: es, EntradaID: en, FechaRecibida: fr, Notas: '' });
+  const donaciones = [
+    Dn('D-1', m + '-01', 'Luisa Gómez Reyes', 'No', 'luisa@ejemplo.com', 500, 'Banco BHD', 'Pendiente'),
+    Dn('D-2', m + '-02', 'Anónimo', 'Sí', 'anonimo@ejemplo.com', 1000, 'PayPal', 'Pendiente'),
+    Dn('D-3', p + '-19', 'Anónimo', 'Sí', 'otro@ejemplo.com', 1500, 'Banco BHD', 'Recibida', 'E-5', p + '-20')
+  ];
+  return { hoy: h, colaboradores, entradas, salidas, donaciones, correos: [], bitacora: [{ Fecha: h + ' 08:00', Usuario: 'demo', Accion: 'Inicio de sesión', Detalle: '' }],
     usuarios: [{ usuario: 'juana', nombre: 'Juana Paulino', rol: 'Administrador', estado: 'Activo', fecha: p + '-01' }] };
 })();
 
 async function demoApi(action, d) {
   await new Promise(r => setTimeout(r, 250));
   const D = DEMO, ses = { usuario: 'juana', nombre: 'Juana Paulino (demo)', rol: 'Administrador' };
-  const todo = (aviso) => ({ ok: true, sesion: ses, hoy: D.hoy, colaboradores: D.colaboradores, entradas: D.entradas, salidas: D.salidas, bitacora: D.bitacora, correos: D.correos, remitente: 'juana107@gmail.com', aviso });
+  const todo = (aviso) => ({ ok: true, sesion: ses, hoy: D.hoy, colaboradores: D.colaboradores, entradas: D.entradas, salidas: D.salidas, bitacora: D.bitacora, correos: D.correos, donaciones: D.donaciones, remitente: 'juana107@gmail.com', aviso });
   const ahora = D.hoy + ' ' + new Date().toTimeString().slice(0, 5);
   const id = p => p + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();
   switch (action) {
@@ -974,9 +1060,15 @@ async function demoApi(action, d) {
       else D.colaboradores.push({ ...d, Monto: +d.Monto, ID: id('C'), FechaRegistro: D.hoy });
       return todo();
     case 'registrarEntrada': {
-      const c = D.colaboradores.find(x => x.ID === d.ColaboradorID);
+      const c = d.Tipo === 'Aporte Círculo' ? D.colaboradores.find(x => x.ID === d.ColaboradorID) : null;
       if (d.Tipo === 'Aporte Círculo' && !c) return { ok: false, error: 'Selecciona el colaborador.' };
-      D.entradas.push({ ...d, ID: id('E'), Monto: +d.Monto, Colaborador: c ? c.Nombre : d.Colaborador, ColaboradorID: c ? c.ID : '', MesAporte: c ? d.MesAporte : '', Comprobante: d.archivo ? '#' : '', Estado: 'Activa', FechaRegistro: D.hoy + ' 23:59' });
+      const don = d.Tipo === 'Donación única' && d.DonacionID ? D.donaciones.find(x => x.ID === d.DonacionID) : null;
+      const eid = id('E');
+      D.entradas.push({ ...d, ID: eid, Monto: +d.Monto, Colaborador: c ? c.Nombre : don ? don.Nombre : d.Colaborador, ColaboradorID: c ? c.ID : don ? don.ID : '', MesAporte: c ? d.MesAporte : '', Comprobante: d.archivo ? '#' : '', Estado: 'Activa', FechaRegistro: D.hoy + ' 23:59' });
+      if (don) {
+        Object.assign(don, { Estado: 'Recibida', EntradaID: eid, FechaRecibida: d.Fecha });
+        if (d.enviarGracias === 'on') { D.correos.push({ Fecha: ahora, Tipo: 'Agradecimiento', ColaboradorID: don.ID, MesAporte: '' }); return todo('Donación registrada y agradecimiento enviado a ' + don.Correo + ' (demo)'); }
+      }
       if (c && d.enviarGracias === 'on') { D.correos.push({ Fecha: ahora, Tipo: 'Agradecimiento', ColaboradorID: c.ID, MesAporte: d.MesAporte }); return todo('Entrada registrada y agradecimiento enviado a ' + c.Correo + ' (demo)'); }
       return todo();
     }
@@ -989,7 +1081,12 @@ async function demoApi(action, d) {
       D.salidas.push({ ...d, ID: id('S'), Monto: +d.Monto, Factura: d.archivo ? '#' : '', Estado: 'Activa', FechaRegistro: D.hoy + ' 23:59' }); return todo();
     case 'anularEntrada': case 'anularSalida': {
       const r = (action === 'anularEntrada' ? D.entradas : D.salidas).find(x => x.ID === d.ID);
-      r.Estado = 'Anulada'; r.Nota = 'ANULADA: ' + d.motivo; return todo();
+      r.Estado = 'Anulada'; r.Nota = 'ANULADA: ' + d.motivo;
+      const dn = D.donaciones.find(x => x.EntradaID === d.ID); if (dn) Object.assign(dn, { Estado: 'Pendiente', EntradaID: '', FechaRecibida: '' });
+      return todo();
+    }
+    case 'marcarDonacion': {
+      const dn = D.donaciones.find(x => x.ID === d.ID); dn.Estado = d.estado; return todo();
     }
     case 'listarUsuarios': return { ok: true, usuarios: D.usuarios };
     case 'crearUsuario': D.usuarios.push({ usuario: d.usuario, nombre: d.nombre, rol: d.rol, estado: 'Activo', fecha: D.hoy }); return { ok: true, usuarios: D.usuarios };
