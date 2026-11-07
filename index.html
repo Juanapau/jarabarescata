@@ -101,6 +101,23 @@ main{flex:1;margin-left:236px;padding:22px 26px 90px;min-width:0}
 .progreso div{height:100%;background:var(--esmeralda)}
 .vacio{color:var(--suave);text-align:center;padding:24px 10px}
 .vacio i{font-size:1.8rem;color:var(--turquesa);display:block;margin-bottom:8px}
+/* ---------- Perritos ---------- */
+.perros{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.perro{background:#fff;border:1px solid var(--borde);border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
+.perro .fotos{position:relative;aspect-ratio:4/3;background:var(--gris-claro);overflow:hidden}
+.perro .fotos > img:first-child{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.perro .fotos .mini{position:absolute;right:8px;bottom:8px;width:56px;height:56px;border-radius:10px;border:3px solid #fff;object-fit:cover;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.perro .fotos .chips-sup{position:absolute;left:8px;top:8px;display:flex;gap:6px;flex-wrap:wrap}
+.perro .cuerpo{padding:12px 14px 14px;display:flex;flex-direction:column;gap:6px;flex:1}
+.perro h3{font-size:1.35rem;color:var(--esmeralda)}
+.perro .datos{font-size:.82rem;color:var(--suave);font-weight:700}
+.perro .hist{font-size:.88rem;line-height:1.4;color:var(--tinta);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.perro .pie-p{margin-top:auto;display:flex;gap:6px;justify-content:space-between;align-items:center;padding-top:6px}
+.subir-foto{display:flex;gap:12px;align-items:center}
+.subir-foto img{width:84px;height:84px;border-radius:12px;object-fit:cover;background:var(--gris-claro);flex-shrink:0;border:1px solid var(--borde)}
+.subir-foto .der{flex:1;min-width:0}
+.check-linea{display:flex;gap:10px;align-items:center;font-weight:700;cursor:pointer;background:var(--verde-claro);padding:10px 12px;border-radius:10px}
+.check-linea input{width:20px;height:20px;accent-color:var(--esmeralda);flex-shrink:0}
 
 /* ---------- Tablas ---------- */
 .filtros{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
@@ -244,6 +261,7 @@ body{-webkit-tap-highlight-color:transparent}
       <button data-vista="resumen" class="activo"><i class="fa-solid fa-chart-pie"></i> Resumen</button>
       <button data-vista="pagos"><i class="fa-solid fa-calendar-check"></i> Control de pagos</button>
       <button data-vista="donaciones"><i class="fa-solid fa-hand-holding-heart"></i> Donaciones únicas</button>
+      <button data-vista="perritos"><i class="fa-solid fa-dog"></i> Perritos</button>
       <button data-vista="colaboradores"><i class="fa-solid fa-users"></i> Colaboradores</button>
       <button data-vista="entradas"><i class="fa-solid fa-arrow-down"></i> Entradas</button>
       <button data-vista="salidas"><i class="fa-solid fa-arrow-up"></i> Salidas</button>
@@ -401,7 +419,7 @@ function aplicarDatos(r) { E.datos = r; if (r.sesion) E.sesion = r.sesion; }
 async function recargar() { try { await accion('datos', {}, 'Datos actualizados'); mostrar(E.vista); } catch (e) { toast(e.message); } }
 
 // ===================== NAVEGACIÓN =====================
-const TITULOS = { resumen: 'Resumen', pagos: 'Control de pagos', donaciones: 'Donaciones únicas', colaboradores: 'Colaboradores', entradas: 'Entradas', salidas: 'Salidas', informes: 'Informes', usuarios: 'Usuarios' };
+const TITULOS = { resumen: 'Resumen', pagos: 'Control de pagos', donaciones: 'Donaciones únicas', perritos: 'Perritos', colaboradores: 'Colaboradores', entradas: 'Entradas', salidas: 'Salidas', informes: 'Informes', usuarios: 'Usuarios' };
 $('menu').addEventListener('click', e => { const b = e.target.closest('button'); if (b) mostrar(b.dataset.vista); });
 
 function moverMes(d) {
@@ -416,8 +434,8 @@ function mostrar(v) {
   const ba = document.querySelector('#menu button.activo'); if (ba && innerWidth <= 860) ba.scrollIntoView({ inline: 'center', block: 'nearest' });
   $('tituloVista').textContent = TITULOS[v];
   $('txtMes').textContent = nombreMes(E.mes);
-  $('selMes').style.visibility = (v === 'colaboradores' || v === 'usuarios') ? 'hidden' : 'visible';
-  ({ resumen: vResumen, pagos: vPagos, donaciones: vDonaciones, colaboradores: vColaboradores, entradas: vEntradas, salidas: vSalidas, informes: vInformes, usuarios: vUsuarios })[v]();
+  $('selMes').style.visibility = (v === 'colaboradores' || v === 'usuarios' || v === 'perritos') ? 'hidden' : 'visible';
+  ({ resumen: vResumen, pagos: vPagos, donaciones: vDonaciones, perritos: vPerritos, colaboradores: vColaboradores, entradas: vEntradas, salidas: vSalidas, informes: vInformes, usuarios: vUsuarios })[v]();
   window.scrollTo(0, 0);
 }
 
@@ -565,6 +583,109 @@ function modalNoLlego(id) {
 }
 async function marcarDon(id, estado) {
   try { await accion('marcarDonacion', { ID: id, estado }, 'Donación reabierta'); mostrar(E.vista); } catch (e) { toast(e.message); }
+}
+
+// ===================== VISTA: PERRITOS (CATÁLOGO) =====================
+const ESTADOS_PERRITO = ['Disponible', 'Adoptado', 'En memoria'];
+const CHIP_PERRO = { Disponible: 'c-verde', Adoptado: 'c-turq', 'En memoria': 'c-gris' };
+const SIN_FOTO = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="400" height="300" fill="#e3f5f3"/><text x="200" y="175" font-size="90" text-anchor="middle">🐶</text></svg>');
+function fotoUrl(id, ancho = 600) {
+  if (!id) return SIN_FOTO;
+  if (String(id).startsWith('data:')) return id;            // vista previa / demo
+  return 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(id) + '&sz=w' + ancho;
+}
+
+function vPerritos() {
+  const todos = E.datos.perritos || [];
+  const fe = vPerritos.estado || 'Todos';
+  const n = e => todos.filter(p => p.Estado === e).length;
+  const visibles = todos.filter(p => p.Visible === 'Sí' && p.Estado === 'Disponible').length;
+  $('vista').innerHTML = `
+  <div class="kpis">
+    <div class="kpi"><small>Perritos registrados</small><b>${todos.length}</b><span class="det">${n('Disponible')} disponibles · ${n('Adoptado')} adoptados</span></div>
+    <div class="kpi"><small>En el catálogo público</small><b style="color:var(--esmeralda)">${visibles}</b><span class="det">Disponibles y marcados para mostrar</span></div>
+  </div>
+  <div class="panel">
+    <h2>Catálogo de perritos <button class="btn btn-nar" onclick="modalPerrito()"><i class="fa-solid fa-plus"></i> Agregar perrito</button></h2>
+    <div class="filtros">
+      <input placeholder="Buscar por nombre o historia…" value="${esc(vPerritos.q || '')}" oninput="vPerritos.q=this.value;vPerritosLista()">
+      <select onchange="vPerritos.estado=this.value;vPerritosLista()">${['Todos', ...ESTADOS_PERRITO].map(f => `<option ${f === fe ? 'selected' : ''}>${f}</option>`).join('')}</select>
+    </div>
+    <div id="listaPerros"></div>
+  </div>`;
+  vPerritosLista();
+}
+
+function vPerritosLista() {
+  const todos = E.datos.perritos || [];
+  const fe = vPerritos.estado || 'Todos', q = (vPerritos.q || '').toLowerCase();
+  const lista = todos.filter(p => (fe === 'Todos' || p.Estado === fe) && (p.Nombre + ' ' + p.Historia).toLowerCase().includes(q))
+    .sort((a, b) => a.Nombre.localeCompare(b.Nombre));
+  $('listaPerros').innerHTML = lista.length ? `<div class="perros">${lista.map(p => `
+      <article class="perro">
+        <div class="fotos">
+          <img src="${fotoUrl(p.Foto1)}" alt="${esc(p.Nombre)}" loading="lazy" onerror="this.src=SIN_FOTO">
+          ${p.Foto2 ? `<img class="mini" src="${fotoUrl(p.Foto2, 200)}" alt="" loading="lazy" onerror="this.remove()">` : ''}
+          <div class="chips-sup"><span class="chip ${CHIP_PERRO[p.Estado] || 'c-gris'}">${esc(p.Estado)}</span>
+            ${p.Visible === 'Sí' ? '' : '<span class="chip c-gris"><i class="fa-solid fa-eye-slash"></i> Oculto</span>'}</div>
+        </div>
+        <div class="cuerpo">
+          <h3>${esc(p.Nombre)}</h3>
+          <div class="datos"><i class="fa-solid ${p.Sexo === 'Hembra' ? 'fa-venus' : 'fa-mars'}"></i> ${esc(p.Sexo)}${p.Edad ? ' · ' + esc(p.Edad) : ''} · ${esc(p.Tamano)}</div>
+          <p class="hist">${esc(p.Historia)}</p>
+          <div class="pie-p">
+            ${p.Enlace ? `<a class="enlace" href="${esc(p.Enlace)}" target="_blank" rel="noopener"><i class="fa-solid fa-video"></i> Video</a>` : '<span></span>'}
+            <button class="btn btn-sec btn-mini" onclick="modalPerrito('${esc(p.ID)}')"><i class="fa-solid fa-pen"></i> Editar</button>
+          </div>
+        </div>
+      </article>`).join('')}</div>`
+    : `<div class="vacio"><i class="fa-solid fa-dog"></i>${todos.length ? 'No hay perritos con este filtro.' : 'Todavía no hay perritos. Toca <b>Agregar perrito</b> para empezar el catálogo.'}</div>`;
+}
+
+function modalPerrito(id) {
+  const p = id ? (E.datos.perritos || []).find(x => x.ID === id) : { Sexo: 'Macho', Tamano: 'Mediano', Estado: 'Disponible', Visible: 'Sí' };
+  if (!p) return;
+  abrirModal(`<h3>${id ? 'Editar a ' + esc(p.Nombre) : 'Agregar perrito'}</h3>
+  <div class="error-form oculto" id="mErr"></div>
+  <form id="fM"><div class="grid">
+    <div class="campo col2"><label>Nombre</label><input name="Nombre" value="${esc(p.Nombre || '')}" maxlength="60" required></div>
+    <div class="campo"><label>Sexo</label><select name="Sexo">${opts(['Macho', 'Hembra'], p.Sexo)}</select></div>
+    <div class="campo"><label>Tamaño</label><select name="Tamano">${opts(['Pequeño', 'Mediano', 'Grande'], p.Tamano)}</select></div>
+    <div class="campo col2"><label>Edad aproximada</label><input name="Edad" value="${esc(p.Edad || '')}" placeholder="Ej.: 2 años, cachorro de 4 meses" maxlength="40"></div>
+    <div class="campo col2"><label>Historia <span class="ayuda" id="cuentaHist" style="font-weight:600"></span></label>
+      <textarea name="Historia" id="mHist" rows="5" maxlength="1200" placeholder="¿Dónde lo encontraron, cómo está, qué necesita, cómo es su carácter?" required>${esc(p.Historia || '')}</textarea></div>
+    <div class="campo col2"><label>Foto principal</label>
+      <div class="subir-foto"><img id="prev1" src="${fotoUrl(p.Foto1, 300)}" alt=""><div class="der">
+        <input type="file" id="mFoto1" accept="image/*"><p class="ayuda">${p.Foto1 ? 'Elige otra solo si quieres cambiarla.' : 'Obligatoria. Se ve en el catálogo.'}</p></div></div></div>
+    <div class="campo col2"><label>Segunda foto (opcional)</label>
+      <div class="subir-foto"><img id="prev2" src="${fotoUrl(p.Foto2, 300)}" alt=""><div class="der">
+        <input type="file" id="mFoto2" accept="image/*">
+        ${p.Foto2 ? '<label class="ayuda" style="display:flex;gap:6px;align-items:center;margin-top:6px;font-weight:700;cursor:pointer"><input type="checkbox" name="quitarFoto2" style="width:auto"> Quitar la segunda foto</label>' : ''}</div></div></div>
+    <div class="campo col2"><label>Enlace al video en Instagram o TikTok (opcional)</label><input name="Enlace" type="url" value="${esc(p.Enlace || '')}" placeholder="https://www.instagram.com/reel/…"></div>
+    <div class="campo"><label>Estado</label><select name="Estado">${opts(ESTADOS_PERRITO, p.Estado)}</select></div>
+    <div class="campo" style="display:flex;align-items:flex-end"><label class="check-linea" style="width:100%"><input type="checkbox" name="Visible" ${p.Visible === 'Sí' ? 'checked' : ''}> Mostrar en el catálogo</label></div>
+    <div class="campo col2"><label>Notas internas (no se publican)</label><textarea name="Notas" rows="2">${esc(p.Notas || '')}</textarea></div>
+  </div>
+  <p class="ayuda" style="margin-bottom:8px"><i class="fa-solid fa-circle-info"></i> Solo los perritos <b>Disponibles</b> y marcados para mostrar aparecerán en el catálogo para apadrinar.</p>
+  <div class="pie"><button type="button" class="btn btn-sec" onclick="cerrarModal()">Cancelar</button><button class="btn btn-prim"><i class="fa-solid fa-floppy-disk"></i> Guardar</button></div></form>`);
+  const contar = () => $('cuentaHist').textContent = '(' + $('mHist').value.length + '/1200)';
+  $('mHist').oninput = contar; contar();
+  ['1', '2'].forEach(n => $('mFoto' + n).onchange = e => { const f = e.target.files[0]; if (f) $('prev' + n).src = URL.createObjectURL(f); });
+  $('fM').onsubmit = async e => {
+    e.preventDefault();
+    const d = Object.fromEntries(new FormData(e.target)); if (id) d.ID = id;
+    d.Visible = e.target.Visible.checked;
+    if (d.quitarFoto2) d.quitarFoto2 = true;
+    try {
+      const f1 = $('mFoto1').files[0], f2 = $('mFoto2').files[0];
+      if (!id && !f1) return errModal('Agrega la foto principal del perrito.');
+      if (f1) d.foto1 = await prepararArchivo(f1, 1200, 0.82);
+      if (f2) d.foto2 = await prepararArchivo(f2, 1200, 0.82);
+      if ((f1 && !d.foto1.tipo.startsWith('image/')) || (f2 && !d.foto2.tipo.startsWith('image/'))) return errModal('Las fotos deben ser imágenes (JPG o PNG).');
+      await accion('guardarPerrito', d, id ? 'Perrito actualizado' : 'Perrito agregado al catálogo');
+      cerrarModal(); mostrar(E.vista);
+    } catch (err) { errModal(err.message); }
+  };
 }
 
 // ===================== VISTA: CONTROL DE PAGOS =====================
@@ -823,7 +944,7 @@ async function enviarMovimiento(e, act, ok) {
   } catch (err) { errModal(err.message); }
 }
 
-function prepararArchivo(f) {
+function prepararArchivo(f, maxLado = 1600, calidad = 0.8) {
   return new Promise((res, rej) => {
     if (f.type === 'application/pdf') {
       if (f.size > 6 * 1024 * 1024) return rej(new Error('El PDF es muy grande (máx. 6 MB).'));
@@ -832,10 +953,10 @@ function prepararArchivo(f) {
     if (!f.type.startsWith('image/')) return rej(new Error('Solo se aceptan fotos o PDF.'));
     const img = new Image(), url = URL.createObjectURL(f);
     img.onload = () => {
-      const max = 1600, k = Math.min(1, max / Math.max(img.width, img.height));
+      const max = maxLado, k = Math.min(1, max / Math.max(img.width, img.height));
       const cv = document.createElement('canvas'); cv.width = Math.round(img.width * k); cv.height = Math.round(img.height * k);
       cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height); URL.revokeObjectURL(url);
-      res({ nombre: f.name.replace(/\.[^.]+$/, '') + '.jpg', tipo: 'image/jpeg', base64: cv.toDataURL('image/jpeg', 0.8).split(',')[1] });
+      res({ nombre: f.name.replace(/\.[^.]+$/, '') + '.jpg', tipo: 'image/jpeg', base64: cv.toDataURL('image/jpeg', calidad).split(',')[1] });
     };
     img.onerror = () => rej(new Error('No se pudo leer la imagen.')); img.src = url;
   });
@@ -1040,14 +1161,21 @@ const DEMO = (() => {
     Dn('D-2', m + '-02', 'Anónimo', 'Sí', 'anonimo@ejemplo.com', 1000, 'PayPal', 'Pendiente'),
     Dn('D-3', p + '-19', 'Anónimo', 'Sí', 'otro@ejemplo.com', 1500, 'Banco BHD', 'Recibida', 'E-5', p + '-20')
   ];
-  return { hoy: h, colaboradores, entradas, salidas, donaciones, correos: [], bitacora: [{ Fecha: h + ' 08:00', Usuario: 'demo', Accion: 'Inicio de sesión', Detalle: '' }],
+  const fotoDemo = (c1, c2, e) => 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient></defs><rect width="400" height="300" fill="url(#g)"/><text x="200" y="185" font-size="110" text-anchor="middle">${e}</text></svg>`);
+  const Pe = (id, n, sx, ed, t, hi, f1, f2, es = 'Disponible', vi = 'Sí') => ({ ID: id, FechaRegistro: p + '-10', Nombre: n, Sexo: sx, Edad: ed, Tamano: t, Historia: hi, Enlace: '', Foto1: f1, Foto2: f2, Estado: es, Visible: vi, Notas: '' });
+  const perritos = [
+    Pe('P-1', 'Canela', 'Hembra', '2 años', 'Mediano', 'La encontramos cerca del parque, muy delgada y con sarna. Hoy está en tratamiento y es súper cariñosa con todos.', fotoDemo('#F39A35', '#FFF7E8', '🐕'), fotoDemo('#25A9A0', '#FFF7E8', '🐾')),
+    Pe('P-2', 'Bruno', 'Macho', 'Cachorro de 5 meses', 'Pequeño', 'Rescatado de un solar con sus hermanos. Juguetón y curioso, necesita sus vacunas completas.', fotoDemo('#16845B', '#e5f4ec', '🐶'), ''),
+    Pe('P-3', 'Luna', 'Hembra', '4 años', 'Grande', 'Fue atropellada y la operamos de una pata. Ya camina y encontró hogar con una familia del pueblo.', fotoDemo('#25A9A0', '#e3f5f3', '🦮'), '', 'Adoptado', 'No')
+  ];
+  return { hoy: h, colaboradores, entradas, salidas, donaciones, perritos, correos: [], bitacora: [{ Fecha: h + ' 08:00', Usuario: 'demo', Accion: 'Inicio de sesión', Detalle: '' }],
     usuarios: [{ usuario: 'juana', nombre: 'Juana Paulino', rol: 'Administrador', estado: 'Activo', fecha: p + '-01' }] };
 })();
 
 async function demoApi(action, d) {
   await new Promise(r => setTimeout(r, 250));
   const D = DEMO, ses = { usuario: 'juana', nombre: 'Juana Paulino (demo)', rol: 'Administrador' };
-  const todo = (aviso) => ({ ok: true, sesion: ses, hoy: D.hoy, colaboradores: D.colaboradores, entradas: D.entradas, salidas: D.salidas, bitacora: D.bitacora, correos: D.correos, donaciones: D.donaciones, remitente: 'juana107@gmail.com', aviso });
+  const todo = (aviso) => ({ ok: true, sesion: ses, hoy: D.hoy, colaboradores: D.colaboradores, entradas: D.entradas, salidas: D.salidas, bitacora: D.bitacora, correos: D.correos, donaciones: D.donaciones, perritos: D.perritos, remitente: 'juana107@gmail.com', aviso });
   const ahora = D.hoy + ' ' + new Date().toTimeString().slice(0, 5);
   const id = p => p + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();
   switch (action) {
@@ -1083,6 +1211,15 @@ async function demoApi(action, d) {
       const r = (action === 'anularEntrada' ? D.entradas : D.salidas).find(x => x.ID === d.ID);
       r.Estado = 'Anulada'; r.Nota = 'ANULADA: ' + d.motivo;
       const dn = D.donaciones.find(x => x.EntradaID === d.ID); if (dn) Object.assign(dn, { Estado: 'Pendiente', EntradaID: '', FechaRecibida: '' });
+      return todo();
+    }
+    case 'guardarPerrito': {
+      const toUrl = f => f ? 'data:' + f.tipo + ';base64,' + f.base64 : '';
+      const datos = { ...d, Visible: d.Visible ? 'Sí' : 'No' }; delete datos.foto1; delete datos.foto2; delete datos.quitarFoto2;
+      if (d.ID) {
+        const pe = D.perritos.find(x => x.ID === d.ID);
+        Object.assign(pe, datos, { Foto1: d.foto1 ? toUrl(d.foto1) : pe.Foto1, Foto2: d.foto2 ? toUrl(d.foto2) : d.quitarFoto2 ? '' : pe.Foto2 });
+      } else D.perritos.push({ ...datos, ID: id('P'), FechaRegistro: D.hoy, Foto1: toUrl(d.foto1), Foto2: toUrl(d.foto2) });
       return todo();
     }
     case 'marcarDonacion': {
