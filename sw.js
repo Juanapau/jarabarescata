@@ -1,6 +1,6 @@
 // Service worker del panel JarabaRescata.
 // Si cambias index.html y quieres forzar la actualización en los celulares, sube el número de versión.
-const VERSION = 'jr-panel-v4';
+const VERSION = 'jr-panel-v5';
 const BASICOS = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
