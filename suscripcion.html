@@ -76,6 +76,59 @@
   .check input{width:22px;height:22px;flex-shrink:0;accent-color:var(--esmeralda);padding:0}
   .boton.verde{background:var(--esmeralda);box-shadow:0 6px 0 var(--esmeralda-osc)}
   .boton.verde:active{box-shadow:0 2px 0 var(--esmeralda-osc)}
+  .opcion.apadrina .ico{background:var(--turquesa)}
+  .opcion.apadrina b{color:#17766f}
+  /* ---------- Catálogo para apadrinar ---------- */
+  .cargando{text-align:center;color:var(--suave);padding:30px 0;font-weight:700}
+  .cat{display:grid;gap:14px}
+  .tarj{border:2px solid var(--borde);border-radius:18px;overflow:hidden;background:#fffdf8;display:flex;flex-direction:column}
+  .tarj .foto{position:relative;aspect-ratio:16/11;background:#e3f5f3;overflow:hidden;cursor:pointer}
+  .tarj .foto img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .tarj .cuerpo{padding:14px 16px 16px}
+  .tarj h3{font-family:'Baloo 2',sans-serif;font-size:1.5rem;line-height:1.1;color:var(--esmeralda)}
+  .tarj .datos{font-size:.85rem;color:var(--suave);font-weight:700;margin:2px 0 8px}
+  .tarj .prev{font-size:.92rem;line-height:1.45;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:10px}
+  .necesita{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+  .nec{font-size:.78rem;font-weight:800;padding:4px 10px;border-radius:20px}
+  .nec.si{background:#fff0dc;color:#9a5a10}
+  .nec.no{background:#e5f4ec;color:var(--esmeralda)}
+  .tarj.completo{opacity:.8}
+  .boton.turq{background:var(--turquesa);box-shadow:0 6px 0 #17766f;font-size:1.1rem;padding:12px}
+  .boton.turq:active{box-shadow:0 2px 0 #17766f}
+  .boton.gris{background:#c9c2b2;box-shadow:none;cursor:default}
+  /* Ficha */
+  .capa{position:fixed;inset:0;background:rgba(15,40,30,.55);z-index:50;display:flex;align-items:flex-end;justify-content:center}
+  .hoja{background:#fff;width:100%;max-width:560px;max-height:94vh;overflow:auto;border-radius:22px 22px 0 0;padding:0 0 calc(18px + env(safe-area-inset-bottom))}
+  @media (min-width:600px){.capa{align-items:center}.hoja{border-radius:22px;max-height:90vh}}
+  .galeria{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;position:relative}
+  .galeria::-webkit-scrollbar{display:none}
+  .galeria img{flex:0 0 100%;width:100%;aspect-ratio:4/3;object-fit:cover;scroll-snap-align:center;background:#e3f5f3}
+  .puntos{display:flex;justify-content:center;gap:6px;margin-top:8px}
+  .puntos span{width:8px;height:8px;border-radius:50%;background:var(--borde)}
+  .puntos span.act{background:var(--turquesa)}
+  .cerrar-hoja{position:sticky;top:10px;float:right;margin:10px 10px -46px 0;z-index:2;width:36px;height:36px;border-radius:50%;border:0;background:rgba(255,255,255,.92);color:var(--tinta);font-size:1.1rem;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+  .hoja .contenido{padding:14px 18px 0}
+  .hoja h2{font-family:'Baloo 2',sans-serif;color:var(--esmeralda);font-size:1.8rem;line-height:1.1}
+  .historia{font-size:.97rem;line-height:1.6;margin:12px 0}
+  .historia p{margin:0 0 10px}
+  .historia h4,.historia h5,.historia h6{font-family:'Baloo 2',sans-serif;color:var(--esmeralda);margin:14px 0 6px;line-height:1.2}
+  .historia h4{font-size:1.3rem}.historia h5{font-size:1.12rem}.historia h6{font-size:1rem}
+  .historia > :first-child{margin-top:0}
+  .historia ul,.historia ol{margin:0 0 10px 22px}
+  .historia strong{color:var(--esmeralda-osc)}
+  .mods{display:grid;gap:10px;margin:14px 0}
+  .mod{display:flex;gap:12px;align-items:center;border:2px solid var(--borde);border-radius:14px;padding:12px 14px;cursor:pointer;background:#fffdf8}
+  .mod input{width:20px;height:20px;accent-color:var(--turquesa);flex-shrink:0;padding:0}
+  .mod b{display:block}
+  .mod small{color:var(--suave)}
+  .mod .precio{margin-left:auto;font-weight:800;color:var(--esmeralda);white-space:nowrap}
+  .mod.tomado{opacity:.55;cursor:not-allowed}
+  .mod:has(input:checked){border-color:var(--turquesa);background:#f1faf8}
+  .elegido{display:flex;gap:12px;align-items:center;background:#f1faf8;border-radius:14px;padding:10px;margin-bottom:18px}
+  .elegido img{width:64px;height:64px;border-radius:12px;object-fit:cover;flex-shrink:0;background:#e3f5f3}
+  .elegido b{display:block;font-family:'Baloo 2',sans-serif;font-size:1.2rem;color:var(--esmeralda);line-height:1.1}
+  .elegido small{color:var(--suave);font-weight:700}
+  .exfoto{width:120px;height:120px;border-radius:50%;object-fit:cover;margin:0 auto 12px;display:block;border:4px solid #fff;box-shadow:0 6px 18px rgba(22,132,91,.2)}
   footer{text-align:center;margin-top:22px;color:var(--suave);font-size:.9rem}
   footer a{color:var(--esmeralda);font-weight:800;text-decoration:none}
   body{-webkit-tap-highlight-color:transparent}
@@ -121,8 +174,51 @@
           <span><b>Haz una donación única</b><small>Un solo aporte, cuando quieras.</small></span>
           <i class="fa-solid fa-chevron-right flecha"></i>
         </button>
+        <button type="button" class="opcion apadrina" onclick="mostrarVista('apadrinar')">
+          <span class="ico"><i class="fa-solid fa-dog"></i></span>
+          <span><b>Apadrina un perrito</b><small>Elige a un perrito y cúbrele el alimento, la veterinaria o ambos cada mes.</small></span>
+          <i class="fa-solid fa-chevron-right flecha"></i>
+        </button>
       </div>
     </section>
+
+    <section id="vApadrinar" style="display:none">
+      <button type="button" class="volver" onclick="mostrarVista('eleccion')"><i class="fa-solid fa-arrow-left"></i> Volver</button>
+      <div id="catalogo"><p class="cargando"><i class="fa-solid fa-paw fa-bounce"></i><br>Cargando perritos…</p></div>
+    </section>
+
+    <form id="formApad" novalidate style="display:none">
+      <button type="button" class="volver" onclick="volverCatalogo()"><i class="fa-solid fa-arrow-left"></i> Elegir otro perrito</button>
+      <div class="elegido" id="elegido"></div>
+
+      <div class="campo">
+        <label for="nombreA"><i class="fa-solid fa-user"></i> Nombre completo</label>
+        <input id="nombreA" autocomplete="name" placeholder="Ej.: María Rodríguez Peña" maxlength="120">
+      </div>
+      <div class="campo">
+        <label for="correoA"><i class="fa-solid fa-envelope"></i> Correo electrónico</label>
+        <input id="correoA" type="email" autocomplete="email" placeholder="tucorreo@ejemplo.com" maxlength="120">
+        <p class="ayuda">Te enviaremos los datos para depositar y noticias de tu ahijado.</p>
+      </div>
+      <div class="campo">
+        <label for="diaA"><i class="fa-solid fa-calendar-day"></i> Día para depositar</label>
+        <select id="diaA">
+          <option value="">Selecciona el día</option>
+          <option value="15 de cada mes">15 de cada mes</option>
+          <option value="Fin de mes">Fin de mes</option>
+        </select>
+      </div>
+      <div class="campo">
+        <label for="metodoA"><i class="fa-solid fa-wallet"></i> Método de pago</label>
+        <select id="metodoA">
+          <option value="">Selecciona el método</option>
+          <option value="PayPal">PayPal</option>
+          <option value="Banco BHD">Banco BHD</option>
+          <option value="Banreservas">Banco de Reservas</option>
+        </select>
+      </div>
+      <button class="boton turq" type="submit" id="enviarA"><i class="fa-solid fa-dog"></i> Confirmar apadrinamiento</button>
+    </form>
 
     <form id="formulario" novalidate style="display:none">
       <button type="button" class="volver" onclick="mostrarVista('eleccion')"><i class="fa-solid fa-arrow-left"></i> Volver</button>
@@ -223,11 +319,12 @@
     </form>
 
     <section class="exito" id="exito" aria-live="polite">
-      <div class="icono"><i class="fa-solid fa-heart"></i></div>
+      <div class="icono" id="exIcono"><i class="fa-solid fa-heart"></i></div>
+      <img class="exfoto" id="exFoto" alt="" style="display:none">
       <h2 id="exTitulo"></h2>
       <p id="exTexto"></p>
       <div class="resumen">
-        <div><small>Aporte</small><b id="exMonto"></b></div>
+        <div><small id="exL1">Aporte</small><b id="exMonto"></b></div>
         <div><small id="exL2">Depósito</small><b id="exDia"></b></div>
         <div><small>Método</small><b id="exMetodo"></b></div>
       </div>
@@ -243,6 +340,10 @@
   <footer>
     Sigue los casos en Instagram <a href="https://www.instagram.com/jarabarescata/" target="_blank" rel="noopener">@jarabarescata</a>
   </footer>
+</div>
+
+<div class="capa" id="capa" style="display:none" onclick="if(event.target===this)cerrarFicha()">
+  <div class="hoja" id="hoja" role="dialog" aria-modal="true"></div>
 </div>
 
 <script>
@@ -269,19 +370,215 @@ $('monto').addEventListener('change', () => {
 const TEXTOS = {
   eleccion: ['Ayuda a los <span>perritos de la calle</span>', 'Cada aporte nos ayuda a alimentar, vacunar, esterilizar y atender a los perritos de la calle. Cada caso lo verás en nuestras redes.'],
   mensual:  ['Únete al <span>Círculo de Patitas</span>', 'Con un aporte mensual nos ayudas a alimentar, vacunar, esterilizar y atender a los perritos de la calle. Cada caso lo verás en nuestras redes.'],
-  unica:    ['Haz una <span>donación única</span>', 'Un solo aporte, cuando quieras. Tu donación se usa para alimentar, vacunar, esterilizar y atender a los perritos de la calle.']
+  unica:    ['Haz una <span>donación única</span>', 'Un solo aporte, cuando quieras. Tu donación se usa para alimentar, vacunar, esterilizar y atender a los perritos de la calle.'],
+  apadrinar:['Apadrina un <span>perrito</span>', 'Elige a un perrito y cúbrele el alimento, la atención veterinaria o ambos, cada mes. Te contaremos cómo va en nuestras redes.']
 };
 function mostrarVista(v) {
   $('alerta').classList.remove('ver');
   $('eleccion').style.display = v === 'eleccion' ? 'block' : 'none';
   $('formulario').style.display = v === 'mensual' ? 'block' : 'none';
   $('formUnica').style.display = v === 'unica' ? 'block' : 'none';
+  $('vApadrinar').style.display = v === 'apadrinar' ? 'block' : 'none';
+  $('formApad').style.display = 'none';
+  if (v === 'apadrinar') cargarCatalogo();
   $('titulo').innerHTML = TEXTOS[v][0]; $('intro').textContent = TEXTOS[v][1];
-  try { const u = new URL(location.href); if (v === 'eleccion') u.searchParams.delete('tipo'); else u.searchParams.set('tipo', v); history.replaceState(null, '', u); } catch (e) {}
+  try { const u = new URL(location.href); if (v === 'eleccion') u.searchParams.delete('tipo'); else u.searchParams.set('tipo', v); if (v !== 'apadrinar') u.searchParams.delete('perrito'); history.replaceState(null, '', u); } catch (e) {}
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
-// Enlace directo: ...?tipo=mensual o ...?tipo=unica
-(() => { let t = ''; try { t = new URLSearchParams(location.search).get('tipo'); } catch (e) {} if (t === 'mensual' || t === 'unica') mostrarVista(t); })();
+
+// ---------- Apadrinar ----------
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const rd = n => 'RD$ ' + Number(n || 0).toLocaleString('es-DO');
+const SIN_FOTO = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="400" height="300" fill="#e3f5f3"/><text x="200" y="175" font-size="90" text-anchor="middle">🐶</text></svg>');
+function fotoUrl(id, ancho = 700) {
+  if (!id) return SIN_FOTO;
+  if (String(id).startsWith('data:')) return id;
+  return 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(id) + '&sz=w' + ancho;
+}
+// Formato de las historias: # Título, ## Subtítulo, **negrita**, *cursiva*, listas, párrafos
+function formatoHistoria(txt) {
+  const inline = t => esc(t)
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/__(.+?)__/g, '<strong>$1</strong>')
+    .replace(/(^|[^*\w])\*(?!\s)([^*]+?)\*(?!\*)/g, '$1<em>$2</em>')
+    .replace(/(^|[^\w])_(?!\s)([^_]+?)_(?!\w)/g, '$1<em>$2</em>');
+  let html = '', lista = null, parrafo = [];
+  const cerrarP = () => { if (parrafo.length) { html += '<p>' + parrafo.map(inline).join('<br>') + '</p>'; parrafo = []; } };
+  const cerrarL = () => { if (lista) { html += '</' + lista + '>'; lista = null; } };
+  String(txt || '').replace(/\r/g, '').split('\n').forEach(l => {
+    const t = l.trim(); let m;
+    if (!t) { cerrarP(); cerrarL(); return; }
+    if ((m = t.match(/^(#{1,3})\s+(.*)$/))) { cerrarP(); cerrarL(); const h = m[1].length + 3; html += `<h${h}>` + inline(m[2]) + `</h${h}>`; return; }
+    if ((m = t.match(/^[-*•]\s+(.*)$/))) { cerrarP(); if (lista !== 'ul') { cerrarL(); html += '<ul>'; lista = 'ul'; } html += '<li>' + inline(m[1]) + '</li>'; return; }
+    if ((m = t.match(/^\d+[.)]\s+(.*)$/))) { cerrarP(); if (lista !== 'ol') { cerrarL(); html += '<ol>'; lista = 'ol'; } html += '<li>' + inline(m[1]) + '</li>'; return; }
+    cerrarL(); parrafo.push(t);
+  });
+  cerrarP(); cerrarL();
+  return html;
+}
+function textoPlano(txt) {
+  return String(txt || '').replace(/^\s*#{1,3}\s+/gm, '').replace(/^\s*[-*•]\s+/gm, '• ')
+    .replace(/\*\*(.+?)\*\*/g, '$1').replace(/__(.+?)__/g, '$1').replace(/\*(\S[^*]*?)\*/g, '$1')
+    .replace(/\s*\n+\s*/g, ' ').trim();
+}
+
+const MODALIDADES = [
+  { id: 'Alimento mensual', icono: 'fa-bowl-food', cubre: ['alimento'], desc: 'Su comida de cada mes' },
+  { id: 'Atención veterinaria', icono: 'fa-stethoscope', cubre: ['veterinaria'], desc: 'Vacunas, consultas y medicinas' },
+  { id: 'Ambos', icono: 'fa-heart', cubre: ['alimento', 'veterinaria'], desc: 'Alimento y atención veterinaria' }
+];
+const CAT = { perritos: null, montos: { 'Alimento mensual': 500, 'Atención veterinaria': 500, 'Ambos': 1000 } };
+let elegido = null; // { perrito, modalidad }
+
+async function cargarCatalogo(forzar) {
+  if (CAT.perritos && !forzar) return pintarCatalogo();
+  $('catalogo').innerHTML = '<p class="cargando"><i class="fa-solid fa-paw fa-bounce"></i><br>Cargando perritos…</p>';
+  try {
+    let r;
+    if (API_URL) {
+      const resp = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'catalogo' }) });
+      r = await resp.json();
+    } else {
+      await new Promise(ok => setTimeout(ok, 500)); r = catalogoDemo();
+    }
+    if (!r.ok) throw new Error(r.error || 'No se pudo cargar el catálogo.');
+    CAT.perritos = r.perritos || []; if (r.montos) CAT.montos = r.montos;
+    pintarCatalogo();
+    let pid = ''; try { pid = new URLSearchParams(location.search).get('perrito'); } catch (e) {}
+    if (pid && CAT.perritos.some(p => p.ID === pid)) abrirFicha(pid);
+  } catch (err) {
+    $('catalogo').innerHTML = `<p class="cargando">${esc(err.message === 'Failed to fetch' ? 'No hay conexión.' : err.message)}<br><br>
+      <button type="button" class="volver" onclick="cargarCatalogo(true)"><i class="fa-solid fa-rotate"></i> Intentar de nuevo</button></p>`;
+  }
+}
+
+const libres = p => MODALIDADES.filter(m => m.cubre.every(k => p.libre[k]));
+function pintarCatalogo() {
+  const lista = CAT.perritos.slice().sort((a, b) => (libres(b).length > 0) - (libres(a).length > 0));
+  if (!lista.length) {
+    $('catalogo').innerHTML = '<p class="cargando"><i class="fa-solid fa-dog" style="font-size:2rem;color:var(--turquesa)"></i><br>Por ahora todos nuestros perritos tienen padrino. ¡Vuelve pronto o síguenos en Instagram!</p>';
+    return;
+  }
+  $('catalogo').innerHTML = '<div class="cat">' + lista.map(p => {
+    const completo = !libres(p).length;
+    return `<article class="tarj ${completo ? 'completo' : ''}">
+      <div class="foto" onclick="abrirFicha('${esc(p.ID)}')"><img src="${fotoUrl(p.Foto1)}" alt="${esc(p.Nombre)}" loading="lazy" onerror="this.src=SIN_FOTO"></div>
+      <div class="cuerpo">
+        <h3>${esc(p.Nombre)}</h3>
+        <div class="datos"><i class="fa-solid ${p.Sexo === 'Hembra' ? 'fa-venus' : 'fa-mars'}"></i> ${esc(p.Sexo)}${p.Edad ? ' · ' + esc(p.Edad) : ''} · ${esc(p.Tamano)}</div>
+        <p class="prev">${esc(textoPlano(p.Historia))}</p>
+        <div class="necesita">
+          ${p.libre.alimento ? '<span class="nec si"><i class="fa-solid fa-bowl-food"></i> Necesita alimento</span>' : '<span class="nec no"><i class="fa-solid fa-check"></i> Alimento cubierto</span>'}
+          ${p.libre.veterinaria ? '<span class="nec si"><i class="fa-solid fa-stethoscope"></i> Necesita veterinaria</span>' : '<span class="nec no"><i class="fa-solid fa-check"></i> Veterinaria cubierta</span>'}
+        </div>
+        <button type="button" class="boton ${completo ? 'gris' : 'turq'}" onclick="abrirFicha('${esc(p.ID)}')">
+          ${completo ? '<i class="fa-solid fa-heart"></i> ¡Ya tiene padrinos! Conoce su historia' : '<i class="fa-solid fa-book-open"></i> Conocer su historia'}</button>
+      </div>
+    </article>`;
+  }).join('') + '</div>';
+}
+
+function abrirFicha(id) {
+  const p = CAT.perritos.find(x => x.ID === id); if (!p) return;
+  const fotos = [p.Foto1, p.Foto2].filter(Boolean);
+  const disp = libres(p);
+  $('hoja').innerHTML = `
+    <button type="button" class="cerrar-hoja" onclick="cerrarFicha()" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
+    <div class="galeria" id="galeria">${fotos.map(f => `<img src="${fotoUrl(f, 900)}" alt="${esc(p.Nombre)}" onerror="this.src=SIN_FOTO">`).join('')}</div>
+    ${fotos.length > 1 ? `<div class="puntos" id="puntos">${fotos.map((f, i) => `<span class="${i ? '' : 'act'}"></span>`).join('')}</div>` : ''}
+    <div class="contenido">
+      <h2>${esc(p.Nombre)}</h2>
+      <div class="ayuda" style="font-weight:700"><i class="fa-solid ${p.Sexo === 'Hembra' ? 'fa-venus' : 'fa-mars'}"></i> ${esc(p.Sexo)}${p.Edad ? ' · ' + esc(p.Edad) : ''} · ${esc(p.Tamano)}</div>
+      <div class="historia">${formatoHistoria(p.Historia)}</div>
+      ${p.Enlace ? `<p style="margin-bottom:10px"><a href="${esc(p.Enlace)}" target="_blank" rel="noopener" style="color:var(--turquesa);font-weight:800;text-decoration:none"><i class="fa-solid fa-video"></i> Ver su video</a></p>` : ''}
+      ${disp.length ? `
+      <h3 style="font-family:'Baloo 2',sans-serif;color:var(--esmeralda);font-size:1.3rem;margin-top:6px">¿Cómo quieres apadrinar a ${esc(p.Nombre)}?</h3>
+      <div class="mods">${MODALIDADES.map(m => { const ok = m.cubre.every(k => p.libre[k]); return `
+        <label class="mod ${ok ? '' : 'tomado'}">
+          <input type="radio" name="modalidad" value="${esc(m.id)}" ${ok ? '' : 'disabled'}>
+          <span><b><i class="fa-solid ${m.icono}" style="color:var(--turquesa)"></i> ${esc(m.id)}</b><small>${ok ? esc(m.desc) : 'Ya tiene padrino'}</small></span>
+          <span class="precio">${rd(CAT.montos[m.id])}<small style="display:block;text-align:right;font-weight:600">al mes</small></span>
+        </label>`; }).join('')}</div>
+      <div class="alerta" id="alertaFicha"></div>
+      <button type="button" class="boton turq" onclick="elegirModalidad('${esc(p.ID)}')"><i class="fa-solid fa-dog"></i> Apadrinar a ${esc(p.Nombre)}</button>`
+      : `<p class="cargando" style="padding:14px 0"><i class="fa-solid fa-heart" style="color:var(--esmeralda)"></i> ${esc(p.Nombre)} ya tiene padrinos. ¡Gracias por tu interés! Puedes apadrinar a otro perrito.</p>`}
+    </div>`;
+  $('capa').style.display = 'flex'; document.body.style.overflow = 'hidden'; $('hoja').scrollTop = 0;
+  const g = $('galeria');
+  if (g && $('puntos')) g.addEventListener('scroll', () => { const i = Math.round(g.scrollLeft / g.clientWidth); [...$('puntos').children].forEach((s, j) => s.classList.toggle('act', i === j)); }, { passive: true });
+  try { const u = new URL(location.href); u.searchParams.set('perrito', p.ID); history.replaceState(null, '', u); } catch (e) {}
+}
+function cerrarFicha() {
+  $('capa').style.display = 'none'; document.body.style.overflow = '';
+  try { const u = new URL(location.href); u.searchParams.delete('perrito'); history.replaceState(null, '', u); } catch (e) {}
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('capa').style.display !== 'none') cerrarFicha(); });
+
+function elegirModalidad(id) {
+  const p = CAT.perritos.find(x => x.ID === id);
+  const sel = document.querySelector('input[name="modalidad"]:checked');
+  if (!sel) { const a = $('alertaFicha'); a.textContent = 'Elige una opción para apadrinar.'; a.classList.add('ver'); return; }
+  elegido = { perrito: p, modalidad: sel.value };
+  cerrarFicha();
+  try { const u = new URL(location.href); u.searchParams.set('perrito', p.ID); history.replaceState(null, '', u); } catch (e) {}
+  $('elegido').innerHTML = `<img src="${fotoUrl(p.Foto1, 200)}" alt="" onerror="this.src=SIN_FOTO">
+    <div><small>Vas a apadrinar a</small><b>${esc(p.Nombre)}</b><small>${esc(sel.value)} · ${rd(CAT.montos[sel.value])} al mes</small></div>`;
+  $('vApadrinar').style.display = 'none'; $('formApad').style.display = 'block'; $('alerta').classList.remove('ver');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function volverCatalogo() {
+  $('formApad').style.display = 'none'; $('vApadrinar').style.display = 'block'; $('alerta').classList.remove('ver');
+  pintarCatalogo();
+}
+
+$('formApad').addEventListener('submit', async e => {
+  e.preventDefault();
+  $('alerta').classList.remove('ver');
+  if (!elegido) return volverCatalogo();
+  const d = {
+    perritoID: elegido.perrito.ID, modalidad: elegido.modalidad,
+    nombre: $('nombreA').value.trim().replace(/\s+/g, ' '),
+    correo: $('correoA').value.trim().toLowerCase(),
+    dia: $('diaA').value, metodo: $('metodoA').value
+  };
+  if (d.nombre.split(' ').length < 2) return mostrarError('Escribe tu nombre completo (nombre y apellido).');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.correo)) return mostrarError('Revisa tu correo electrónico.');
+  if (!d.dia) return mostrarError('Selecciona el día para depositar.');
+  if (!d.metodo) return mostrarError('Selecciona el método de pago.');
+  const btn = $('enviarA');
+  btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
+  try {
+    let r;
+    if (API_URL) {
+      const resp = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'apadrinar', data: d }) });
+      r = await resp.json();
+    } else {
+      await new Promise(ok => setTimeout(ok, 700));
+      r = { ok: true, deposito: { lineas: [['Modo demostración', 'Los datos reales aparecen al conectar el sistema']] } };
+    }
+    if (!r.ok) {
+      if (r.recargar) { CAT.perritos = null; await cargarCatalogo(true); volverCatalogo(); }
+      throw new Error(r.error || 'No se pudo completar el apadrinamiento.');
+    }
+    mostrarExito({ ...d, monto: CAT.montos[d.modalidad] }, r.deposito, 'apadrinar');
+  } catch (err) {
+    mostrarError(err.message === 'Failed to fetch' ? 'No hay conexión. Inténtalo de nuevo.' : err.message);
+  } finally {
+    btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-dog"></i> Confirmar apadrinamiento';
+  }
+});
+
+function catalogoDemo() {
+  const f = (c1, e) => 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="400" height="300" fill="${c1}"/><text x="200" y="185" font-size="110" text-anchor="middle">${e}</text></svg>`);
+  return { ok: true, montos: CAT.montos, perritos: [
+    { ID: 'P-1', Nombre: 'Canela', Sexo: 'Hembra', Edad: '2 años', Tamano: 'Mediano', Enlace: '', Foto1: f('#F39A35', '🐕'), Foto2: f('#25A9A0', '🐾'),
+      Historia: '# 🐾 Hola, soy Canela\n\nMe encontraron cerca del parque, **muy delgada y con sarna**. Hoy estoy en tratamiento y soy *súper cariñosa* con todos.\n\n## Lo que necesito\n- Alimento de calidad\n- Mis baños medicados\n- Mucho amor', libre: { alimento: true, veterinaria: false } },
+    { ID: 'P-2', Nombre: 'Bruno', Sexo: 'Macho', Edad: 'Cachorro de 5 meses', Tamano: 'Pequeño', Enlace: '', Foto1: f('#16845B', '🐶'), Foto2: '',
+      Historia: 'Rescatado de un solar con sus hermanos. **Juguetón y curioso**, necesita completar sus vacunas.', libre: { alimento: true, veterinaria: true } },
+    { ID: 'P-3', Nombre: 'Toby', Sexo: 'Macho', Edad: '3 años', Tamano: 'Grande', Enlace: '', Foto1: f('#9fd8d2', '🦮'), Foto2: '',
+      Historia: 'Tranquilo y noble. Ya tiene quien lo cuide.', libre: { alimento: false, veterinaria: false } }
+  ] };
+}
 
 // ---------- Donación única ----------
 let montoU = '';
@@ -375,10 +672,18 @@ $('formulario').addEventListener('submit', async e => {
 });
 
 function mostrarExito(d, dep, tipo = 'mensual'){
-  ['eleccion', 'formulario', 'formUnica'].forEach(id => $(id).style.display = 'none');
+  ['eleccion', 'formulario', 'formUnica', 'vApadrinar', 'formApad'].forEach(id => $(id).style.display = 'none');
   const primer = (d.nombre || '').split(' ')[0];
   $('exTitulo').textContent = primer ? '¡Gracias, ' + primer + '!' : '¡Gracias por tu donación!';
-  if (tipo === 'unica') {
+  $('exL1').textContent = 'Aporte';
+  if (tipo === 'apadrinar' && elegido) {
+    $('titulo').innerHTML = TEXTOS.apadrinar[0];
+    $('exIcono').style.display = 'none';
+    $('exFoto').src = fotoUrl(elegido.perrito.Foto1, 300); $('exFoto').style.display = 'block';
+    $('exTexto').textContent = 'Ahora eres padrino o madrina de ' + elegido.perrito.Nombre + '. 🐶 Te contaremos cómo va en nuestras redes y por correo.';
+    $('exL1').textContent = 'Aporte mensual';
+    $('exL2').textContent = 'Tu ahijado'; $('exDia').textContent = elegido.perrito.Nombre;
+  } else if (tipo === 'unica') {
     $('titulo').innerHTML = TEXTOS.unica[0];
     $('exTexto').textContent = 'Tu donación hará la diferencia. Cuando recibamos tu depósito te enviaremos un correo de agradecimiento.';
     $('exL2').textContent = 'Tipo'; $('exDia').textContent = 'Donación única';
@@ -420,6 +725,10 @@ function mostrarExito(d, dep, tipo = 'mensual'){
   $('exito').style.display = 'block';
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
+// Enlaces directos: ?tipo=mensual, ?tipo=unica, ?tipo=apadrinar y ?tipo=apadrinar&perrito=ID
+// (va al final para que todo lo anterior ya esté cargado)
+(() => { let t = ''; try { t = new URLSearchParams(location.search).get('tipo'); } catch (e) {} if (t === 'mensual' || t === 'unica' || t === 'apadrinar') mostrarVista(t); })();
 </script>
 </body>
 </html>
