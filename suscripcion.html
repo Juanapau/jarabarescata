@@ -82,8 +82,10 @@
   .cargando{text-align:center;color:var(--suave);padding:30px 0;font-weight:700}
   .cat{display:grid;gap:14px}
   .tarj{border:2px solid var(--borde);border-radius:18px;overflow:hidden;background:#fffdf8;display:flex;flex-direction:column}
-  .tarj .foto{position:relative;aspect-ratio:16/11;background:#e3f5f3;overflow:hidden;cursor:pointer}
-  .tarj .foto img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .tarj .foto{position:relative;aspect-ratio:4/3;background:#e3f5f3;overflow:hidden;cursor:pointer}
+  /* Foto completa (sin recortar) sobre un fondo difuminado de la misma foto */
+  .tarj .foto img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+  .tarj .foto img.fondo{inset:-24px;width:calc(100% + 48px);height:calc(100% + 48px);object-fit:cover;filter:blur(18px) brightness(.92);transform:scale(1.05)}
   .tarj .cuerpo{padding:14px 16px 16px}
   .tarj h3{font-family:'Baloo 2',sans-serif;font-size:1.5rem;line-height:1.1;color:var(--esmeralda)}
   .tarj .datos{font-size:.85rem;color:var(--suave);font-weight:700;margin:2px 0 8px}
@@ -573,7 +575,9 @@ function pintarCatalogo() {
   $('catalogo').innerHTML = '<div class="cat">' + lista.map(p => {
     const completo = !libres(p).length;
     return `<article class="tarj ${completo ? 'completo' : ''}">
-      <div class="foto" onclick="abrirFicha('${esc(p.ID)}')"><img src="${fotoUrl(p.Foto1)}" alt="${esc(p.Nombre)}" loading="lazy" onerror="this.src=SIN_FOTO"></div>
+      <div class="foto" onclick="abrirFicha('${esc(p.ID)}')">
+        <img class="fondo" src="${fotoUrl(p.Foto1)}" alt="" aria-hidden="true" loading="lazy" onerror="this.remove()">
+        <img src="${fotoUrl(p.Foto1)}" alt="${esc(p.Nombre)}" loading="lazy" onerror="this.src=SIN_FOTO"></div>
       <div class="cuerpo">
         <h3>${esc(p.Nombre)}</h3>
         <div class="datos"><i class="fa-solid ${p.Sexo === 'Hembra' ? 'fa-venus' : 'fa-mars'}"></i> ${esc(p.Sexo)}${p.Edad ? ' · ' + esc(p.Edad) : ''} · ${esc(p.Tamano)}</div>
