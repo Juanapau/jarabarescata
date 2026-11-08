@@ -145,6 +145,20 @@
     .hoja .contenido{overflow:auto;max-height:88vh;padding:26px 26px 24px}
     .cerrar-hoja{position:absolute;top:12px;right:12px;float:none;margin:0}
   }
+  .punto{display:flex;gap:12px;align-items:flex-start;border:2px solid var(--borde);border-radius:14px;padding:12px 14px;cursor:pointer;background:#fffdf8;margin-bottom:10px}
+  .punto input{width:20px;height:20px;accent-color:var(--esmeralda);flex-shrink:0;margin-top:2px;padding:0}
+  .punto b{display:block}
+  .punto small{display:block;color:var(--suave);line-height:1.45;margin-top:2px}
+  .punto:has(input:checked){border-color:var(--esmeralda);background:#f1faf5}
+  .adoptar{margin-top:22px;padding:16px;border-radius:16px;background:#fff3df;border:2px dashed #f6c98a}
+  .adoptar h3{font-family:'Baloo 2',sans-serif;color:var(--naranja-osc);font-size:1.35rem;line-height:1.1}
+  .adoptar p{color:var(--tinta);margin:6px 0 12px;line-height:1.45;font-size:.95rem}
+  .opciones-si-no{display:flex;gap:10px}
+  .opciones-si-no label{flex:1;display:flex;gap:8px;align-items:center;justify-content:center;border:2px solid var(--borde);border-radius:12px;padding:11px;cursor:pointer;font-weight:800;background:#fffdf8;margin:0}
+  .opciones-si-no input{width:18px;height:18px;accent-color:var(--naranja);padding:0}
+  .opciones-si-no label:has(input:checked){border-color:var(--naranja);background:#fff0dc}
+  textarea{width:100%;font:inherit;font-size:1rem;padding:13px 14px;border-radius:12px;border:2px solid var(--borde);background:#fffdf8;color:var(--tinta);outline:none;resize:vertical;min-height:110px}
+  textarea:focus{border-color:var(--turquesa)}
   .exfoto{width:120px;height:120px;border-radius:50%;object-fit:cover;margin:0 auto 12px;display:block;border:4px solid #fff;box-shadow:0 6px 18px rgba(22,132,91,.2)}
   footer{text-align:center;margin-top:22px;color:var(--suave);font-size:.9rem}
   footer a{color:var(--esmeralda);font-weight:800;text-decoration:none}
@@ -232,10 +246,66 @@
           <option value="PayPal">PayPal</option>
           <option value="Banco BHD">Banco BHD</option>
           <option value="Banreservas">Banco de Reservas</option>
+          <option value="Entrega personal">Entrega personal (efectivo)</option>
         </select>
       </div>
       <button class="boton turq" type="submit" id="enviarA"><i class="fa-solid fa-dog"></i> Confirmar apadrinamiento</button>
     </form>
+
+    <form id="formAdop" novalidate style="display:none">
+      <button type="button" class="volver" onclick="volverCatalogo()"><i class="fa-solid fa-arrow-left"></i> Volver a los perritos</button>
+      <div class="elegido" id="adElegido"></div>
+      <div class="campo">
+        <label for="adNombre"><i class="fa-solid fa-user"></i> Nombre completo</label>
+        <input id="adNombre" autocomplete="name" placeholder="Ej.: María Rodríguez Peña" maxlength="120">
+      </div>
+      <div class="campo">
+        <label for="adTel"><i class="fa-brands fa-whatsapp"></i> Teléfono o WhatsApp</label>
+        <input id="adTel" type="tel" inputmode="tel" autocomplete="tel" placeholder="Ej.: 809-555-1234" maxlength="30">
+      </div>
+      <div class="campo">
+        <label for="adCorreo"><i class="fa-solid fa-envelope"></i> Correo electrónico</label>
+        <input id="adCorreo" type="email" autocomplete="email" placeholder="tucorreo@ejemplo.com" maxlength="120">
+      </div>
+      <div class="campo">
+        <label for="adSector"><i class="fa-solid fa-location-dot"></i> Sector donde vives</label>
+        <input id="adSector" placeholder="Ej.: Pinar Quemado, Jarabacoa" maxlength="120">
+      </div>
+      <div class="campo">
+        <label><i class="fa-solid fa-house"></i> ¿Tienes espacio para recibirle?</label>
+        <div class="opciones-si-no"><label><input type="radio" name="adEspacio" value="Sí"> Sí</label><label><input type="radio" name="adEspacio" value="No"> No</label></div>
+      </div>
+      <div class="campo">
+        <label><i class="fa-solid fa-paw"></i> ¿Tienes otras mascotas?</label>
+        <div class="opciones-si-no"><label><input type="radio" name="adOtras" value="Sí"> Sí</label><label><input type="radio" name="adOtras" value="No"> No</label></div>
+        <input id="adCuales" placeholder="¿Cuáles? Ej.: un perro y dos gatos" maxlength="200" style="display:none;margin-top:10px">
+      </div>
+      <div class="campo">
+        <label for="adMotivo" id="adMotivoLbl"><i class="fa-solid fa-heart"></i> ¿Por qué quieres adoptar?</label>
+        <textarea id="adMotivo" maxlength="1000" placeholder="Cuéntanos con tus palabras"></textarea>
+      </div>
+      <div class="campo">
+        <label for="adHorario"><i class="fa-solid fa-phone"></i> ¿En qué horario podemos llamarte?</label>
+        <select id="adHorario">
+          <option value="">Selecciona un horario</option>
+          <option>Mañana (8:00 a. m. a 12:00 m.)</option>
+          <option>Tarde (12:00 m. a 5:00 p. m.)</option>
+          <option>Noche (5:00 p. m. a 8:00 p. m.)</option>
+          <option>Cualquier horario</option>
+        </select>
+      </div>
+      <button class="boton" type="submit" id="enviarAd"><i class="fa-solid fa-house-chimney"></i> Enviar solicitud</button>
+    </form>
+
+    <section class="exito" id="exitoAdop" style="display:none" aria-live="polite">
+      <img class="exfoto" id="adFoto" alt="">
+      <h2 id="adTitulo"></h2>
+      <p id="adTexto"></p>
+      <div class="aviso-spam" style="margin-top:16px">
+        <i class="fa-solid fa-envelope-circle-check"></i>
+        <div>Te enviamos una confirmación a tu correo. Si no la ves, revisa tu carpeta de <b>Spam</b> o <b>Promociones</b>.</div>
+      </div>
+    </section>
 
     <form id="formulario" novalidate style="display:none">
       <button type="button" class="volver" onclick="mostrarVista('eleccion')"><i class="fa-solid fa-arrow-left"></i> Volver</button>
@@ -284,6 +354,7 @@
           <option value="PayPal">PayPal</option>
           <option value="Banco BHD">Banco BHD</option>
           <option value="Banreservas">Banco de Reservas</option>
+          <option value="Entrega personal">Entrega personal (efectivo)</option>
         </select>
       </div>
 
@@ -329,6 +400,7 @@
           <option value="PayPal">PayPal</option>
           <option value="Banco BHD">Banco BHD</option>
           <option value="Banreservas">Banco de Reservas</option>
+          <option value="Entrega personal">Entrega personal (efectivo)</option>
         </select>
       </div>
 
@@ -369,10 +441,31 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbwHZm6XCRAMJoCJ9SgSAcVK
 
 // Los datos para depositar (cuentas y cédula) NO están aquí: los envía el servidor
 // solo después de que la suscripción se completa.
-const TITULOS = { 'PayPal': 'PayPal', 'Banco BHD': 'Banco BHD', 'Banreservas': 'Banco de Reservas' };
-// =========================================================
+const TITULOS = { 'PayPal': 'PayPal', 'Banco BHD': 'Banco BHD', 'Banreservas': 'Banco de Reservas', 'Entrega personal': 'Entrega personal' };
 
 const $ = id => document.getElementById(id);
+
+// ---------- Entrega personal: puntos de entrega ----------
+const PUNTOS = {
+  Juana:   { persona: 'Juana Paulino', lugar: 'Colegio Nuestra Señora de la Altagracia', horario: '9:00 a. m. a 3:00 p. m.', direccion: 'Calle Paseo de los Maestro No. 94, Jarabacoa' },
+  Cecilia: { persona: 'Cecilia Calderón', lugar: 'Power Fitness', horario: '9:00 a. m. a 4:00 p. m.', direccion: 'Ave. La Confluencia No. 5, Edificio Carnicería Don Agustín, Jarabacoa' }
+};
+[['metodo', 'pMensual'], ['metodoU', 'pUnica'], ['metodoA', 'pApad']].forEach(([sel, grupo]) => {
+  const caja = document.createElement('div');
+  caja.className = 'campo'; caja.id = 'caja_' + grupo; caja.style.display = 'none';
+  caja.innerHTML = '<label><i class="fa-solid fa-handshake"></i> ¿A quién le entregarás tu aporte?</label>' +
+    Object.entries(PUNTOS).map(([k, p]) => `<label class="punto"><input type="radio" name="${grupo}" value="${k}">
+      <span><b>${p.persona}</b><small>${p.lugar}<br><i class="fa-regular fa-clock"></i> ${p.horario}<br><i class="fa-solid fa-location-dot"></i> ${p.direccion}</small></span></label>`).join('');
+  $(sel).closest('.campo').after(caja);
+  $(sel).addEventListener('change', () => { caja.style.display = $(sel).value === 'Entrega personal' ? 'block' : 'none'; });
+});
+const puntoDe = grupo => (document.querySelector(`input[name="${grupo}"]:checked`) || {}).value || '';
+// Datos de entrega para el modo demostración (en el sistema real los manda el servidor)
+const depDemo = d => d.metodo === 'Entrega personal' && PUNTOS[d.punto]
+  ? { encabezado: 'Dónde entregar tu aporte', lineas: [['Entregar a', PUNTOS[d.punto].persona], ['Lugar', PUNTOS[d.punto].lugar], ['Horario', PUNTOS[d.punto].horario], ['Dirección', PUNTOS[d.punto].direccion]], nota: 'Lleva tu aporte en efectivo en ese horario y menciona que es para JarabaRescata.' }
+  : { lineas: [['Modo demostración', 'Los datos reales aparecen al conectar el sistema']] };
+// =========================================================
+
 if (!API_URL) $('demo').style.display = 'block';
 const MONTO_MINIMO = 100;
 
@@ -396,7 +489,7 @@ function mostrarVista(v) {
   $('formulario').style.display = v === 'mensual' ? 'block' : 'none';
   $('formUnica').style.display = v === 'unica' ? 'block' : 'none';
   $('vApadrinar').style.display = v === 'apadrinar' ? 'block' : 'none';
-  $('formApad').style.display = 'none';
+  $('formApad').style.display = 'none'; $('formAdop').style.display = 'none'; $('exitoAdop').style.display = 'none';
   document.body.classList.toggle('ancho', v === 'apadrinar');
   if (v === 'apadrinar') cargarCatalogo();
   $('titulo').innerHTML = TEXTOS[v][0]; $('intro').textContent = TEXTOS[v][1];
@@ -522,6 +615,11 @@ function abrirFicha(id) {
       <div class="alerta" id="alertaFicha"></div>
       <button type="button" class="boton turq" onclick="elegirModalidad('${esc(p.ID)}')"><i class="fa-solid fa-dog"></i> Apadrinar a ${esc(p.Nombre)}</button>`
       : `<p class="cargando" style="padding:14px 0"><i class="fa-solid fa-heart" style="color:var(--esmeralda)"></i> ${esc(p.Nombre)} ya tiene padrinos. ¡Gracias por tu interés! Puedes apadrinar a otro perrito.</p>`}
+      <div class="adoptar">
+        <h3><i class="fa-solid fa-house-chimney"></i> Quiero adoptar</h3>
+        <p>¿Puedes darle a ${esc(p.Nombre)} un hogar para siempre? Llena el formulario y te llamaremos para conocerte.</p>
+        <button type="button" class="boton" onclick="abrirAdopcion('${esc(p.ID)}')"><i class="fa-solid fa-file-pen"></i> Llenar el formulario</button>
+      </div>
     </div>`;
   $('capa').style.display = 'flex'; document.body.style.overflow = 'hidden'; $('hoja').scrollTop = 0;
   const cont = $('hoja').querySelector('.contenido'); if (cont) cont.scrollTop = 0;
@@ -550,6 +648,8 @@ function elegirModalidad(id) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function volverCatalogo() {
+  $('formAdop').style.display = 'none';
+  $('titulo').innerHTML = TEXTOS.apadrinar[0]; $('intro').textContent = TEXTOS.apadrinar[1];
   $('formApad').style.display = 'none'; $('vApadrinar').style.display = 'block'; $('alerta').classList.remove('ver');
   document.body.classList.add('ancho');
   pintarCatalogo();
@@ -563,12 +663,13 @@ $('formApad').addEventListener('submit', async e => {
     perritoID: elegido.perrito.ID, modalidad: elegido.modalidad,
     nombre: $('nombreA').value.trim().replace(/\s+/g, ' '),
     correo: $('correoA').value.trim().toLowerCase(),
-    dia: $('diaA').value, metodo: $('metodoA').value
+    dia: $('diaA').value, metodo: $('metodoA').value, punto: puntoDe('pApad')
   };
   if (d.nombre.split(' ').length < 2) return mostrarError('Escribe tu nombre completo (nombre y apellido).');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.correo)) return mostrarError('Revisa tu correo electrónico.');
   if (!d.dia) return mostrarError('Selecciona el día para depositar.');
   if (!d.metodo) return mostrarError('Selecciona el método de pago.');
+  if (d.metodo === 'Entrega personal' && !d.punto) return mostrarError('Elige a quién le entregarás tu aporte.');
   const btn = $('enviarA');
   btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
   try {
@@ -578,7 +679,7 @@ $('formApad').addEventListener('submit', async e => {
       r = await resp.json();
     } else {
       await new Promise(ok => setTimeout(ok, 700));
-      r = { ok: true, deposito: { lineas: [['Modo demostración', 'Los datos reales aparecen al conectar el sistema']] } };
+      r = { ok: true, deposito: depDemo(d) };
     }
     if (!r.ok) {
       if (r.recargar) { CAT.perritos = null; await cargarCatalogo(true); volverCatalogo(); }
@@ -589,6 +690,71 @@ $('formApad').addEventListener('submit', async e => {
     mostrarError(err.message === 'Failed to fetch' ? 'No hay conexión. Inténtalo de nuevo.' : err.message);
   } finally {
     btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-dog"></i> Confirmar apadrinamiento';
+  }
+});
+
+// ---------- Adopción ----------
+let adoptando = null;
+function abrirAdopcion(id) {
+  const p = CAT.perritos.find(x => x.ID === id); if (!p) return;
+  adoptando = p;
+  cerrarFicha();
+  try { const u = new URL(location.href); u.searchParams.set('perrito', p.ID); history.replaceState(null, '', u); } catch (e) {}
+  $('adElegido').innerHTML = `<img src="${fotoUrl(p.Foto1, 200)}" alt="" onerror="this.src=SIN_FOTO">
+    <div><small>Solicitud para adoptar a</small><b>${esc(p.Nombre)}</b><small>${esc(p.Sexo)}${p.Edad ? ' · ' + esc(p.Edad) : ''} · ${esc(p.Tamano)}</small></div>`;
+  $('adMotivoLbl').innerHTML = '<i class="fa-solid fa-heart"></i> ¿Por qué quieres adoptar a ' + esc(p.Nombre) + '?';
+  $('titulo').innerHTML = 'Adopta a <span>' + esc(p.Nombre) + '</span>';
+  $('intro').textContent = 'Completa este formulario corto. Te llamaremos para conocerte y conversar sobre los próximos pasos.';
+  $('vApadrinar').style.display = 'none'; $('formApad').style.display = 'none'; $('formAdop').style.display = 'block';
+  $('alerta').classList.remove('ver'); document.body.classList.remove('ancho');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+document.querySelectorAll('input[name="adOtras"]').forEach(r => r.addEventListener('change', () => {
+  const si = (document.querySelector('input[name="adOtras"]:checked') || {}).value === 'Sí';
+  $('adCuales').style.display = si ? 'block' : 'none'; if (si) $('adCuales').focus();
+}));
+
+$('formAdop').addEventListener('submit', async e => {
+  e.preventDefault();
+  $('alerta').classList.remove('ver');
+  if (!adoptando) return volverCatalogo();
+  const val = n => (document.querySelector(`input[name="${n}"]:checked`) || {}).value || '';
+  const d = {
+    perritoID: adoptando.ID,
+    nombre: $('adNombre').value.trim().replace(/\s+/g, ' '),
+    telefono: $('adTel').value.trim(),
+    correo: $('adCorreo').value.trim().toLowerCase(),
+    sector: $('adSector').value.trim(),
+    espacio: val('adEspacio'), otrasMascotas: val('adOtras'), cuales: $('adCuales').value.trim(),
+    motivo: $('adMotivo').value.trim(), horario: $('adHorario').value
+  };
+  if (d.nombre.split(' ').length < 2) return mostrarError('Escribe tu nombre completo (nombre y apellido).');
+  if (d.telefono.replace(/\D/g, '').length < 10) return mostrarError('Escribe un teléfono o WhatsApp válido (10 dígitos).');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.correo)) return mostrarError('Revisa tu correo electrónico.');
+  if (d.sector.length < 3) return mostrarError('Indica el sector donde vives.');
+  if (!d.espacio) return mostrarError('Indica si tienes espacio para recibir a ' + adoptando.Nombre + '.');
+  if (!d.otrasMascotas) return mostrarError('Indica si tienes otras mascotas.');
+  if (d.motivo.length < 10) return mostrarError('Cuéntanos por qué quieres adoptar a ' + adoptando.Nombre + '.');
+  if (!d.horario) return mostrarError('Elige en qué horario podemos llamarte.');
+  const btn = $('enviarAd');
+  btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
+  try {
+    let r;
+    if (API_URL) {
+      const resp = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'solicitarAdopcion', data: d }) });
+      r = await resp.json();
+    } else { await new Promise(ok => setTimeout(ok, 700)); r = { ok: true }; }
+    if (!r.ok) throw new Error(r.error || 'No se pudo enviar la solicitud.');
+    $('formAdop').style.display = 'none';
+    $('adFoto').src = fotoUrl(adoptando.Foto1, 300);
+    $('adTitulo').textContent = '¡Gracias, ' + d.nombre.split(' ')[0] + '!';
+    $('adTexto').textContent = 'Recibimos tu solicitud para adoptar a ' + adoptando.Nombre + '. Te llamaremos al ' + d.telefono + ' en el horario que elegiste para conocerte. 🏡';
+    $('exitoAdop').style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch (err) {
+    mostrarError(err.message === 'Failed to fetch' ? 'No hay conexión. Inténtalo de nuevo.' : err.message);
+  } finally {
+    btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-house-chimney"></i> Enviar solicitud';
   }
 });
 
@@ -627,13 +793,14 @@ $('formUnica').addEventListener('submit', async e => {
     nombre: anonimo ? '' : $('nombreU').value.trim().replace(/\s+/g, ' '),
     correo: $('correoU').value.trim().toLowerCase(),
     monto: montoU === 'otra' ? Number($('montoOtraU').value) : Number(montoU),
-    metodo: $('metodoU').value
+    metodo: $('metodoU').value, punto: puntoDe('pUnica')
   };
   if (!anonimo && d.nombre.split(' ').length < 2) return mostrarError('Escribe tu nombre completo (nombre y apellido), o marca la opción de donación anónima.');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.correo)) return mostrarError('Revisa tu correo electrónico.');
   if (!montoU) return mostrarError('Elige cuánto deseas donar.');
   if (!Number.isInteger(d.monto) || d.monto < MONTO_MINIMO) return mostrarError('Escribe un monto válido, sin decimales, de al menos RD$ ' + MONTO_MINIMO + '.');
   if (!d.metodo) return mostrarError('Selecciona el método de pago.');
+  if (d.metodo === 'Entrega personal' && !d.punto) return mostrarError('Elige a quién le entregarás tu aporte.');
 
   const btn = $('enviarU');
   btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
@@ -644,7 +811,7 @@ $('formUnica').addEventListener('submit', async e => {
       r = await resp.json();
     } else {
       await new Promise(ok => setTimeout(ok, 700));
-      r = { ok: true, deposito: { lineas: [['Modo demostración', 'Los datos reales aparecen al conectar el sistema']] } };
+      r = { ok: true, deposito: depDemo(d) };
     }
     if (!r.ok) throw new Error(r.error || 'No se pudo registrar la donación.');
     mostrarExito(d, r.deposito, 'unica');
@@ -665,7 +832,7 @@ $('formulario').addEventListener('submit', async e => {
     correo: $('correo').value.trim().toLowerCase(),
     monto: $('monto').value === 'otra' ? Number($('montoOtra').value) : Number($('monto').value),
     dia: $('dia').value,
-    metodo: $('metodo').value
+    metodo: $('metodo').value, punto: puntoDe('pMensual')
   };
   if (d.nombre.split(' ').length < 2) return mostrarError('Escribe tu nombre completo (nombre y apellido).');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.correo)) return mostrarError('Revisa tu correo electrónico.');
@@ -674,6 +841,7 @@ $('formulario').addEventListener('submit', async e => {
     return mostrarError('Escribe un monto válido, sin decimales, de al menos RD$ ' + MONTO_MINIMO + '.');
   if (!d.dia) return mostrarError('Selecciona el día para depositar.');
   if (!d.metodo) return mostrarError('Selecciona el método de pago.');
+  if (d.metodo === 'Entrega personal' && !d.punto) return mostrarError('Elige a quién le entregarás tu aporte.');
 
   const btn = $('enviar');
   btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
@@ -684,7 +852,7 @@ $('formulario').addEventListener('submit', async e => {
       r = await resp.json();
     } else {
       await new Promise(ok => setTimeout(ok, 700));
-      r = { ok: true, deposito: { lineas: [['Modo demostración', 'Los datos reales aparecen al conectar el sistema']] } };
+      r = { ok: true, deposito: depDemo(d) };
     }
     if (!r.ok) throw new Error(r.error || 'No se pudo completar el registro.');
     mostrarExito(d, r.deposito, 'mensual');
@@ -696,7 +864,7 @@ $('formulario').addEventListener('submit', async e => {
 });
 
 function mostrarExito(d, dep, tipo = 'mensual'){
-  ['eleccion', 'formulario', 'formUnica', 'vApadrinar', 'formApad'].forEach(id => $(id).style.display = 'none');
+  ['eleccion', 'formulario', 'formUnica', 'vApadrinar', 'formApad', 'formAdop'].forEach(id => $(id).style.display = 'none');
   document.body.classList.remove('ancho');
   const primer = (d.nombre || '').split(' ')[0];
   $('exTitulo').textContent = primer ? '¡Gracias, ' + primer + '!' : '¡Gracias por tu donación!';
@@ -719,7 +887,7 @@ function mostrarExito(d, dep, tipo = 'mensual'){
   $('exMonto').textContent = 'RD$ ' + d.monto.toLocaleString('es-DO');
   $('exMetodo').textContent = TITULOS[d.metodo] || d.metodo;
   const cont = $('exDeposito');
-  cont.innerHTML = '<h3><i class="fa-solid fa-building-columns"></i> Datos para depositar</h3>';
+  cont.innerHTML = '<h3><i class="fa-solid ' + (dep && dep.encabezado ? 'fa-handshake' : 'fa-building-columns') + '"></i> ' + esc(dep && dep.encabezado ? dep.encabezado : 'Datos para depositar') + '</h3>';
   if (!dep || !Array.isArray(dep.lineas)) {
     cont.innerHTML += '<p>Te enviamos los datos para depositar a tu correo.</p>';
     $('exito').style.display = 'block'; window.scrollTo({ top: 0, behavior: 'smooth' }); return;
@@ -735,7 +903,7 @@ function mostrarExito(d, dep, tipo = 'mensual'){
     const t = document.createElement('div'); t.innerHTML = '<small style="color:var(--suave)"></small><br><b></b>';
     t.querySelector('small').textContent = etq; t.querySelector('b').textContent = val;
     fila.appendChild(t);
-    if (val && !/^a nombre de/i.test(etq) && !/^modo/i.test(etq)) {
+    if (val && !dep.encabezado && !/^a nombre de/i.test(etq) && !/^modo/i.test(etq)) {
       const b = document.createElement('button'); b.className = 'copiar'; b.type = 'button';
       b.innerHTML = '<i class="fa-regular fa-copy"></i> Copiar';
       b.onclick = () => navigator.clipboard.writeText(val).then(() => { b.innerHTML = '<i class="fa-solid fa-check"></i> Copiado'; });
