@@ -116,6 +116,19 @@ main{flex:1;margin-left:236px;padding:22px 26px 90px;min-width:0}
 .subir-foto{display:flex;gap:12px;align-items:center}
 .subir-foto img{width:84px;height:84px;border-radius:12px;object-fit:cover;background:var(--gris-claro);flex-shrink:0;border:1px solid var(--borde)}
 .subir-foto .der{flex:1;min-width:0}
+.historia{font-size:.95rem;line-height:1.55;color:var(--tinta)}
+.historia p{margin:0 0 10px}
+.historia h4,.historia h5,.historia h6{font-family:'Baloo 2',sans-serif;color:var(--esmeralda);margin:14px 0 6px;line-height:1.2}
+.historia h4{font-size:1.25rem}.historia h5{font-size:1.1rem}.historia h6{font-size:1rem}
+.historia > :first-child{margin-top:0}
+.historia ul,.historia ol{margin:0 0 10px 22px}
+.historia li{margin-bottom:3px}
+.historia strong{color:var(--esmeralda-osc)}
+.prev-hist{background:#fffdf8;border:2px dashed var(--borde);border-radius:12px;padding:12px 14px;margin-top:8px;max-height:280px;overflow:auto}
+.ficha-fotos{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.ficha-fotos.una{grid-template-columns:1fr}
+.ficha-fotos img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:12px;background:var(--gris-claro);display:block}
+.perro .fotos,.perro h3{cursor:pointer}
 .check-linea{display:flex;gap:10px;align-items:center;font-weight:700;cursor:pointer;background:var(--verde-claro);padding:10px 12px;border-radius:10px}
 .check-linea input{width:20px;height:20px;accent-color:var(--esmeralda);flex-shrink:0}
 
@@ -595,6 +608,48 @@ function fotoUrl(id, ancho = 600) {
   return 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(id) + '&sz=w' + ancho;
 }
 
+// ---------- Formato de las historias ----------
+// Reconoce: # Título, ## Subtítulo, **negrita**, *cursiva*, listas con - o 1., párrafos y saltos de línea.
+function formatoHistoria(txt) {
+  const inline = t => esc(t)
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/__(.+?)__/g, '<strong>$1</strong>')
+    .replace(/(^|[^*\w])\*(?!\s)([^*]+?)\*(?!\*)/g, '$1<em>$2</em>')
+    .replace(/(^|[^\w])_(?!\s)([^_]+?)_(?!\w)/g, '$1<em>$2</em>');
+  let html = '', lista = null, parrafo = [];
+  const cerrarP = () => { if (parrafo.length) { html += '<p>' + parrafo.map(inline).join('<br>') + '</p>'; parrafo = []; } };
+  const cerrarL = () => { if (lista) { html += '</' + lista + '>'; lista = null; } };
+  String(txt || '').replace(/\r/g, '').split('\n').forEach(l => {
+    const t = l.trim(); let m;
+    if (!t) { cerrarP(); cerrarL(); return; }
+    if ((m = t.match(/^(#{1,3})\s+(.*)$/))) { cerrarP(); cerrarL(); const h = m[1].length + 3; html += `<h${h}>` + inline(m[2]) + `</h${h}>`; return; }
+    if ((m = t.match(/^[-*•]\s+(.*)$/))) { cerrarP(); if (lista !== 'ul') { cerrarL(); html += '<ul>'; lista = 'ul'; } html += '<li>' + inline(m[1]) + '</li>'; return; }
+    if ((m = t.match(/^\d+[.)]\s+(.*)$/))) { cerrarP(); if (lista !== 'ol') { cerrarL(); html += '<ol>'; lista = 'ol'; } html += '<li>' + inline(m[1]) + '</li>'; return; }
+    cerrarL(); parrafo.push(t);
+  });
+  cerrarP(); cerrarL();
+  return html;
+}
+// Versión sin símbolos de formato, para las vistas previas cortas de las tarjetas
+function textoPlano(txt) {
+  return String(txt || '').replace(/^\s*#{1,3}\s+/gm, '').replace(/^\s*[-*•]\s+/gm, '• ')
+    .replace(/\*\*(.+?)\*\*/g, '$1').replace(/__(.+?)__/g, '$1').replace(/\*(\S[^*]*?)\*/g, '$1')
+    .replace(/\s*\n+\s*/g, ' ').trim();
+}
+
+function modalFicha(id) {
+  const p = (E.datos.perritos || []).find(x => x.ID === id); if (!p) return;
+  abrirModal(`<div class="ficha-fotos ${p.Foto2 ? '' : 'una'}">
+      <img src="${fotoUrl(p.Foto1, 900)}" alt="${esc(p.Nombre)}" onerror="this.src=SIN_FOTO">
+      ${p.Foto2 ? `<img src="${fotoUrl(p.Foto2, 900)}" alt="" onerror="this.remove()">` : ''}</div>
+    <h3 style="margin-bottom:4px">${esc(p.Nombre)}</h3>
+    <p class="ayuda" style="font-weight:700;margin-bottom:12px"><i class="fa-solid ${p.Sexo === 'Hembra' ? 'fa-venus' : 'fa-mars'}"></i> ${esc(p.Sexo)}${p.Edad ? ' · ' + esc(p.Edad) : ''} · ${esc(p.Tamano)} · <span class="chip ${CHIP_PERRO[p.Estado] || 'c-gris'}">${esc(p.Estado)}</span>${p.Visible === 'Sí' ? '' : ' <span class="chip c-gris">Oculto</span>'}</p>
+    <div class="historia">${formatoHistoria(p.Historia)}</div>
+    ${p.Enlace ? `<p style="margin-top:8px"><a class="enlace" href="${esc(p.Enlace)}" target="_blank" rel="noopener"><i class="fa-solid fa-video"></i> Ver su video</a></p>` : ''}
+    <div class="pie"><button type="button" class="btn btn-sec" onclick="cerrarModal()">Cerrar</button>
+      <button type="button" class="btn btn-prim" onclick="modalPerrito('${esc(p.ID)}')"><i class="fa-solid fa-pen"></i> Editar</button></div>`);
+}
+
 function vPerritos() {
   const todos = E.datos.perritos || [];
   const fe = vPerritos.estado || 'Todos';
@@ -624,17 +679,17 @@ function vPerritosLista() {
   $('listaPerros').innerHTML = lista.length ? `<div class="perros">${lista.map(p => `
       <article class="perro">
         <div class="fotos">
-          <img src="${fotoUrl(p.Foto1)}" alt="${esc(p.Nombre)}" loading="lazy" onerror="this.src=SIN_FOTO">
-          ${p.Foto2 ? `<img class="mini" src="${fotoUrl(p.Foto2, 200)}" alt="" loading="lazy" onerror="this.remove()">` : ''}
+          <img src="${fotoUrl(p.Foto1)}" alt="${esc(p.Nombre)}" loading="lazy" onerror="this.src=SIN_FOTO" onclick="modalFicha('${esc(p.ID)}')">
+          ${p.Foto2 ? `<img class="mini" src="${fotoUrl(p.Foto2, 200)}" alt="" loading="lazy" onerror="this.remove()" onclick="modalFicha('${esc(p.ID)}')">` : ''}
           <div class="chips-sup"><span class="chip ${CHIP_PERRO[p.Estado] || 'c-gris'}">${esc(p.Estado)}</span>
             ${p.Visible === 'Sí' ? '' : '<span class="chip c-gris"><i class="fa-solid fa-eye-slash"></i> Oculto</span>'}</div>
         </div>
         <div class="cuerpo">
-          <h3>${esc(p.Nombre)}</h3>
+          <h3 onclick="modalFicha('${esc(p.ID)}')">${esc(p.Nombre)}</h3>
           <div class="datos"><i class="fa-solid ${p.Sexo === 'Hembra' ? 'fa-venus' : 'fa-mars'}"></i> ${esc(p.Sexo)}${p.Edad ? ' · ' + esc(p.Edad) : ''} · ${esc(p.Tamano)}</div>
-          <p class="hist">${esc(p.Historia)}</p>
+          <p class="hist">${esc(textoPlano(p.Historia))}</p>
           <div class="pie-p">
-            ${p.Enlace ? `<a class="enlace" href="${esc(p.Enlace)}" target="_blank" rel="noopener"><i class="fa-solid fa-video"></i> Video</a>` : '<span></span>'}
+            <button class="btn btn-sec btn-mini" onclick="modalFicha('${esc(p.ID)}')"><i class="fa-solid fa-eye"></i> Ver ficha</button>
             <button class="btn btn-sec btn-mini" onclick="modalPerrito('${esc(p.ID)}')"><i class="fa-solid fa-pen"></i> Editar</button>
           </div>
         </div>
@@ -653,7 +708,10 @@ function modalPerrito(id) {
     <div class="campo"><label>Tamaño</label><select name="Tamano">${opts(['Pequeño', 'Mediano', 'Grande'], p.Tamano)}</select></div>
     <div class="campo col2"><label>Edad aproximada</label><input name="Edad" value="${esc(p.Edad || '')}" placeholder="Ej.: 2 años, cachorro de 4 meses" maxlength="40"></div>
     <div class="campo col2"><label>Historia <span class="ayuda" id="cuentaHist" style="font-weight:600"></span></label>
-      <textarea name="Historia" id="mHist" rows="7" maxlength="2000" placeholder="¿Dónde lo encontraron, cómo está, qué necesita, cómo es su carácter?" required>${esc(p.Historia || '')}</textarea></div>
+      <textarea name="Historia" id="mHist" rows="7" maxlength="2000" placeholder="¿Dónde lo encontraron, cómo está, qué necesita, cómo es su carácter?" required>${esc(p.Historia || '')}</textarea>
+      <p class="ayuda" style="margin-top:6px">Formato: <b>**negrita**</b> · <i>*cursiva*</i> · <b># Título</b> · <b>## Subtítulo</b> · listas con <b>- </b> o <b>1. </b> · deja una línea en blanco entre párrafos.</p>
+      <button type="button" class="btn btn-sec btn-mini" id="btnPrevHist" style="margin-top:6px"><i class="fa-solid fa-eye"></i> Ver cómo se verá</button>
+      <div class="prev-hist historia oculto" id="prevHist"></div></div>
     <div class="campo col2"><label>Foto principal</label>
       <div class="subir-foto"><img id="prev1" src="${fotoUrl(p.Foto1, 300)}" alt=""><div class="der">
         <input type="file" id="mFoto1" accept="image/*"><p class="ayuda">${p.Foto1 ? 'Elige otra solo si quieres cambiarla.' : 'Obligatoria. Se ve en el catálogo.'}</p></div></div></div>
@@ -669,7 +727,13 @@ function modalPerrito(id) {
   <p class="ayuda" style="margin-bottom:8px"><i class="fa-solid fa-circle-info"></i> Solo los perritos <b>Disponibles</b> y marcados para mostrar aparecerán en el catálogo para apadrinar.</p>
   <div class="pie"><button type="button" class="btn btn-sec" onclick="cerrarModal()">Cancelar</button><button class="btn btn-prim"><i class="fa-solid fa-floppy-disk"></i> Guardar</button></div></form>`);
   const contar = () => $('cuentaHist').textContent = '(' + $('mHist').value.length + '/2000)';
-  $('mHist').oninput = contar; contar();
+  const actualizarPrev = () => { $('prevHist').innerHTML = formatoHistoria($('mHist').value) || '<p class="ayuda">Escribe la historia para ver la vista previa.</p>'; };
+  $('mHist').oninput = () => { contar(); if (!$('prevHist').classList.contains('oculto')) actualizarPrev(); }; contar();
+  $('btnPrevHist').onclick = () => {
+    const ver = $('prevHist').classList.toggle('oculto') === false;
+    $('btnPrevHist').innerHTML = ver ? '<i class="fa-solid fa-eye-slash"></i> Ocultar vista previa' : '<i class="fa-solid fa-eye"></i> Ver cómo se verá';
+    if (ver) actualizarPrev();
+  };
   ['1', '2'].forEach(n => $('mFoto' + n).onchange = e => { const f = e.target.files[0]; if (f) $('prev' + n).src = URL.createObjectURL(f); });
   $('fM').onsubmit = async e => {
     e.preventDefault();
@@ -1164,7 +1228,7 @@ const DEMO = (() => {
   const fotoDemo = (c1, c2, e) => 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient></defs><rect width="400" height="300" fill="url(#g)"/><text x="200" y="185" font-size="110" text-anchor="middle">${e}</text></svg>`);
   const Pe = (id, n, sx, ed, t, hi, f1, f2, es = 'Disponible', vi = 'Sí') => ({ ID: id, FechaRegistro: p + '-10', Nombre: n, Sexo: sx, Edad: ed, Tamano: t, Historia: hi, Enlace: '', Foto1: f1, Foto2: f2, Estado: es, Visible: vi, Notas: '' });
   const perritos = [
-    Pe('P-1', 'Canela', 'Hembra', '2 años', 'Mediano', 'La encontramos cerca del parque, muy delgada y con sarna. Hoy está en tratamiento y es súper cariñosa con todos.', fotoDemo('#F39A35', '#FFF7E8', '🐕'), fotoDemo('#25A9A0', '#FFF7E8', '🐾')),
+    Pe('P-1', 'Canela', 'Hembra', '2 años', 'Mediano', '# 🐾 Hola, soy Canela\n\nMe encontraron cerca del parque, **muy delgada y con sarna**. Hoy estoy en tratamiento y soy *súper cariñosa* con todos.\n\n## Lo que necesito\n- Alimento de calidad\n- Mis baños medicados\n- Mucho amor', fotoDemo('#F39A35', '#FFF7E8', '🐕'), fotoDemo('#25A9A0', '#FFF7E8', '🐾')),
     Pe('P-2', 'Bruno', 'Macho', 'Cachorro de 5 meses', 'Pequeño', 'Rescatado de un solar con sus hermanos. Juguetón y curioso, necesita sus vacunas completas.', fotoDemo('#16845B', '#e5f4ec', '🐶'), ''),
     Pe('P-3', 'Luna', 'Hembra', '4 años', 'Grande', 'Fue atropellada y la operamos de una pata. Ya camina y encontró hogar con una familia del pueblo.', fotoDemo('#25A9A0', '#e3f5f3', '🦮'), '', 'Adoptado', 'No')
   ];
