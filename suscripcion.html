@@ -104,7 +104,7 @@
   .galeria::-webkit-scrollbar{display:none}
   .galeria img{flex:0 0 100%;width:100%;aspect-ratio:4/3;object-fit:cover;scroll-snap-align:center;background:#e3f5f3}
   .puntos{display:flex;justify-content:center;gap:6px;margin-top:8px}
-  .puntos span{width:8px;height:8px;border-radius:50%;background:var(--borde)}
+  .puntos span{width:10px;height:10px;border-radius:50%;background:var(--borde);cursor:pointer}
   .puntos span.act{background:var(--turquesa)}
   .cerrar-hoja{position:sticky;top:10px;float:right;margin:10px 10px -46px 0;z-index:2;width:36px;height:36px;border-radius:50%;border:0;background:rgba(255,255,255,.92);color:var(--tinta);font-size:1.1rem;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2)}
   .hoja .contenido{padding:14px 18px 0}
@@ -128,6 +128,23 @@
   .elegido img{width:64px;height:64px;border-radius:12px;object-fit:cover;flex-shrink:0;background:#e3f5f3}
   .elegido b{display:block;font-family:'Baloo 2',sans-serif;font-size:1.2rem;color:var(--esmeralda);line-height:1.1}
   .elegido small{color:var(--suave);font-weight:700}
+  /* Catálogo a pantalla ancha en computadora; en celular se mantiene igual */
+  body.ancho .envoltura{max-width:1200px}
+  body.ancho .intro{max-width:640px;margin-left:auto;margin-right:auto}
+  @media (min-width:700px){
+    body.ancho .cat{grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:18px}
+    body.ancho .tarj .cuerpo{display:flex;flex-direction:column;flex:1}
+    body.ancho .tarj .necesita{margin-top:auto}
+    body.ancho .tarj{transition:transform .15s,box-shadow .15s}
+    body.ancho .tarj:hover{transform:translateY(-3px);box-shadow:0 12px 26px rgba(29,59,48,.12)}
+  }
+  @media (min-width:900px){
+    .hoja{max-width:1000px;display:grid;grid-template-columns:46% 1fr;overflow:hidden;padding:0;position:relative;max-height:88vh}
+    .lado-fotos{background:#e3f5f3;display:flex;flex-direction:column;justify-content:center;padding-bottom:10px}
+    .lado-fotos .galeria img{aspect-ratio:1/1}
+    .hoja .contenido{overflow:auto;max-height:88vh;padding:26px 26px 24px}
+    .cerrar-hoja{position:absolute;top:12px;right:12px;float:none;margin:0}
+  }
   .exfoto{width:120px;height:120px;border-radius:50%;object-fit:cover;margin:0 auto 12px;display:block;border:4px solid #fff;box-shadow:0 6px 18px rgba(22,132,91,.2)}
   footer{text-align:center;margin-top:22px;color:var(--suave);font-size:.9rem}
   footer a{color:var(--esmeralda);font-weight:800;text-decoration:none}
@@ -380,6 +397,7 @@ function mostrarVista(v) {
   $('formUnica').style.display = v === 'unica' ? 'block' : 'none';
   $('vApadrinar').style.display = v === 'apadrinar' ? 'block' : 'none';
   $('formApad').style.display = 'none';
+  document.body.classList.toggle('ancho', v === 'apadrinar');
   if (v === 'apadrinar') cargarCatalogo();
   $('titulo').innerHTML = TEXTOS[v][0]; $('intro').textContent = TEXTOS[v][1];
   try { const u = new URL(location.href); if (v === 'eleccion') u.searchParams.delete('tipo'); else u.searchParams.set('tipo', v); if (v !== 'apadrinar') u.searchParams.delete('perrito'); history.replaceState(null, '', u); } catch (e) {}
@@ -484,8 +502,10 @@ function abrirFicha(id) {
   const disp = libres(p);
   $('hoja').innerHTML = `
     <button type="button" class="cerrar-hoja" onclick="cerrarFicha()" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
-    <div class="galeria" id="galeria">${fotos.map(f => `<img src="${fotoUrl(f, 900)}" alt="${esc(p.Nombre)}" onerror="this.src=SIN_FOTO">`).join('')}</div>
-    ${fotos.length > 1 ? `<div class="puntos" id="puntos">${fotos.map((f, i) => `<span class="${i ? '' : 'act'}"></span>`).join('')}</div>` : ''}
+    <div class="lado-fotos">
+      <div class="galeria" id="galeria">${fotos.map(f => `<img src="${fotoUrl(f, 900)}" alt="${esc(p.Nombre)}" onerror="this.src=SIN_FOTO">`).join('')}</div>
+      ${fotos.length > 1 ? `<div class="puntos" id="puntos">${fotos.map((f, i) => `<span class="${i ? '' : 'act'}"></span>`).join('')}</div>` : ''}
+    </div>
     <div class="contenido">
       <h2>${esc(p.Nombre)}</h2>
       <div class="ayuda" style="font-weight:700"><i class="fa-solid ${p.Sexo === 'Hembra' ? 'fa-venus' : 'fa-mars'}"></i> ${esc(p.Sexo)}${p.Edad ? ' · ' + esc(p.Edad) : ''} · ${esc(p.Tamano)}</div>
@@ -504,7 +524,9 @@ function abrirFicha(id) {
       : `<p class="cargando" style="padding:14px 0"><i class="fa-solid fa-heart" style="color:var(--esmeralda)"></i> ${esc(p.Nombre)} ya tiene padrinos. ¡Gracias por tu interés! Puedes apadrinar a otro perrito.</p>`}
     </div>`;
   $('capa').style.display = 'flex'; document.body.style.overflow = 'hidden'; $('hoja').scrollTop = 0;
+  const cont = $('hoja').querySelector('.contenido'); if (cont) cont.scrollTop = 0;
   const g = $('galeria');
+  if (g && $('puntos')) [...$('puntos').children].forEach((sp, i) => sp.onclick = () => g.scrollTo({ left: i * g.clientWidth, behavior: 'smooth' }));
   if (g && $('puntos')) g.addEventListener('scroll', () => { const i = Math.round(g.scrollLeft / g.clientWidth); [...$('puntos').children].forEach((s, j) => s.classList.toggle('act', i === j)); }, { passive: true });
   try { const u = new URL(location.href); u.searchParams.set('perrito', p.ID); history.replaceState(null, '', u); } catch (e) {}
 }
@@ -524,10 +546,12 @@ function elegirModalidad(id) {
   $('elegido').innerHTML = `<img src="${fotoUrl(p.Foto1, 200)}" alt="" onerror="this.src=SIN_FOTO">
     <div><small>Vas a apadrinar a</small><b>${esc(p.Nombre)}</b><small>${esc(sel.value)} · ${rd(CAT.montos[sel.value])} al mes</small></div>`;
   $('vApadrinar').style.display = 'none'; $('formApad').style.display = 'block'; $('alerta').classList.remove('ver');
+  document.body.classList.remove('ancho');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function volverCatalogo() {
   $('formApad').style.display = 'none'; $('vApadrinar').style.display = 'block'; $('alerta').classList.remove('ver');
+  document.body.classList.add('ancho');
   pintarCatalogo();
 }
 
@@ -673,6 +697,7 @@ $('formulario').addEventListener('submit', async e => {
 
 function mostrarExito(d, dep, tipo = 'mensual'){
   ['eleccion', 'formulario', 'formUnica', 'vApadrinar', 'formApad'].forEach(id => $(id).style.display = 'none');
+  document.body.classList.remove('ancho');
   const primer = (d.nombre || '').split(' ')[0];
   $('exTitulo').textContent = primer ? '¡Gracias, ' + primer + '!' : '¡Gracias por tu donación!';
   $('exL1').textContent = 'Aporte';
