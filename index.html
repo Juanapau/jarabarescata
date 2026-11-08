@@ -288,6 +288,7 @@ body{-webkit-tap-highlight-color:transparent}
       <button data-vista="donaciones"><i class="fa-solid fa-hand-holding-heart"></i> Donaciones únicas</button>
       <button data-vista="perritos"><i class="fa-solid fa-dog"></i> Perritos</button>
       <button data-vista="padrinos"><i class="fa-solid fa-shield-dog"></i> Padrinos</button>
+      <button data-vista="adopciones"><i class="fa-solid fa-house-chimney"></i> Adopciones</button>
       <button data-vista="colaboradores"><i class="fa-solid fa-users"></i> Colaboradores</button>
       <button data-vista="entradas"><i class="fa-solid fa-arrow-down"></i> Entradas</button>
       <button data-vista="salidas"><i class="fa-solid fa-arrow-up"></i> Salidas</button>
@@ -343,8 +344,16 @@ const LOGO = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBAUEBAY
 const TIPOS_ENTRADA = ['Aporte Círculo', 'Apadrinamiento', 'Donación única', 'Actividad o evento', 'Otro'];
 const MODALIDADES = { 'Alimento mensual': ['alimento'], 'Atención veterinaria': ['veterinaria'], 'Ambos': ['alimento', 'veterinaria'] };
 const CATEGORIAS = ['Veterinario / consulta', 'Vacunas', 'Esterilización', 'Alimento', 'Medicinas', 'Transporte', 'Materiales e insumos', 'Otros'];
-const METODOS = ['PayPal', 'Banco BHD', 'Banreservas', 'Efectivo', 'Otro'];
-const METODOS_SUSC = ['PayPal', 'Banco BHD', 'Banreservas'];
+const METODOS = ['PayPal', 'Banco BHD', 'Banreservas', 'Entrega personal', 'Efectivo', 'Otro'];
+const METODOS_SUSC = ['PayPal', 'Banco BHD', 'Banreservas', 'Entrega personal'];
+// Puntos de entrega personal (mismos que en el servidor)
+const PUNTOS = { Juana: 'Juana Paulino · Colegio Nuestra Señora de la Altagracia', Cecilia: 'Cecilia Calderón · Power Fitness' };
+const metodoTxt = x => x.Metodo === 'Entrega personal' && PUNTOS[x.PuntoEntrega] ? 'Entrega personal · ' + x.PuntoEntrega : (x.Metodo || '');
+function campoPunto(metodo, punto) {
+  return `<div class="campo col2 ${metodo === 'Entrega personal' ? '' : 'oculto'}" id="bPunto"><label>¿A quién entrega su aporte?</label>
+    <select name="PuntoEntrega">${Object.entries(PUNTOS).map(([k, t]) => `<option value="${k}" ${k === (punto || 'Juana') ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select></div>`;
+}
+function ligarPunto() { const f = $('fM'); if (f && f.Metodo && $('bPunto')) f.Metodo.addEventListener('change', () => $('bPunto').classList.toggle('oculto', f.Metodo.value !== 'Entrega personal')); }
 const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 
 const E = { token: null, sesion: null, datos: null, mes: null, vista: 'resumen', usuarios: [] };
@@ -446,7 +455,7 @@ function aplicarDatos(r) { E.datos = r; if (r.sesion) E.sesion = r.sesion; }
 async function recargar() { try { await accion('datos', {}, 'Datos actualizados'); mostrar(E.vista); } catch (e) { toast(e.message); } }
 
 // ===================== NAVEGACIÓN =====================
-const TITULOS = { resumen: 'Resumen', pagos: 'Control de pagos', donaciones: 'Donaciones únicas', perritos: 'Perritos', padrinos: 'Padrinos', colaboradores: 'Colaboradores', entradas: 'Entradas', salidas: 'Salidas', informes: 'Informes', usuarios: 'Usuarios' };
+const TITULOS = { resumen: 'Resumen', pagos: 'Control de pagos', donaciones: 'Donaciones únicas', perritos: 'Perritos', padrinos: 'Padrinos', adopciones: 'Adopciones', colaboradores: 'Colaboradores', entradas: 'Entradas', salidas: 'Salidas', informes: 'Informes', usuarios: 'Usuarios' };
 $('menu').addEventListener('click', e => { const b = e.target.closest('button'); if (b) mostrar(b.dataset.vista); });
 
 function moverMes(d) {
@@ -461,8 +470,8 @@ function mostrar(v) {
   const ba = document.querySelector('#menu button.activo'); if (ba && innerWidth <= 860) ba.scrollIntoView({ inline: 'center', block: 'nearest' });
   $('tituloVista').textContent = TITULOS[v];
   $('txtMes').textContent = nombreMes(E.mes);
-  $('selMes').style.visibility = (v === 'colaboradores' || v === 'usuarios' || v === 'perritos' || v === 'padrinos') ? 'hidden' : 'visible';
-  ({ resumen: vResumen, pagos: vPagos, donaciones: vDonaciones, perritos: vPerritos, padrinos: vPadrinos, colaboradores: vColaboradores, entradas: vEntradas, salidas: vSalidas, informes: vInformes, usuarios: vUsuarios })[v]();
+  $('selMes').style.visibility = (v === 'colaboradores' || v === 'usuarios' || v === 'perritos' || v === 'padrinos' || v === 'adopciones') ? 'hidden' : 'visible';
+  ({ resumen: vResumen, pagos: vPagos, donaciones: vDonaciones, perritos: vPerritos, padrinos: vPadrinos, adopciones: vAdopciones, colaboradores: vColaboradores, entradas: vEntradas, salidas: vSalidas, informes: vInformes, usuarios: vUsuarios })[v]();
   window.scrollTo(0, 0);
 }
 
@@ -599,7 +608,7 @@ function vDonaciones() {
     ${lista.length ? `<div class="tabla-cont"><table><thead><tr><th>Donante</th><th>Registro</th><th>Método</th><th>Estado</th><th class="monto">Monto</th><th></th></tr></thead><tbody>
     ${lista.map(x => { const anon = x.Anonimo === 'Sí', g = gracias(x.ID); return `<tr>
       <td><b>${anon ? 'Anónimo' : esc(x.Nombre)}</b>${anon ? ' <span class="chip c-turq">Anónima</span>' : ''}<br><span class="ayuda">${esc(x.Correo)}</span></td>
-      <td>${fechaCorta(x.FechaRegistro)}</td><td>${esc(x.Metodo)}</td>
+      <td>${fechaCorta(x.FechaRegistro)}</td><td>${esc(metodoTxt(x))}</td>
       <td><div><span class="chip ${CHIP_DON[x.Estado] || 'c-gris'}">${esc(x.Estado)}</span>${x.Estado === 'Recibida' ? `<br><span class="ayuda">${fechaCorta(x.FechaRecibida)}${g.length ? ' · <i class="fa-solid fa-heart" style="color:var(--esmeralda)"></i> Agradecido' : ''}</span>` : ''}</div></td>
       <td class="monto">${rd(x.Monto)}</td>
       <td><div class="acc">${x.Estado === 'Pendiente' ? `
@@ -653,6 +662,76 @@ function htmlCobertura(p) {
   </div>`;
 }
 
+// ===================== VISTA: ADOPCIONES =====================
+const ESTADOS_ADOP = ['Nueva', 'En entrevista', 'Aprobada', 'No aprobada', 'Adoptado'];
+const CHIP_ADOP = { Nueva: 'c-nar', 'En entrevista': 'c-turq', Aprobada: 'c-verde', 'No aprobada': 'c-gris', Adoptado: 'c-verde' };
+const enProceso = a => ['Nueva', 'En entrevista', 'Aprobada'].indexOf(a.Estado) >= 0;
+const telWa = t => { let d = String(t || '').replace(/\D/g, ''); if (d.length === 10) d = '1' + d; return d; };
+function vAdopciones() {
+  const todas = E.datos.adopciones || [], perros = E.datos.perritos || [];
+  const fe = vAdopciones.estado || 'En proceso';
+  const lista = todas.filter(a => fe === 'Todas' || (fe === 'En proceso' ? enProceso(a) : a.Estado === fe))
+    .sort((a, b) => String(b.FechaRegistro).localeCompare(String(a.FechaRegistro)));
+  $('vista').innerHTML = `
+  <div class="kpis">
+    <div class="kpi"><small>Solicitudes nuevas</small><b style="color:var(--naranja-osc)">${todas.filter(a => a.Estado === 'Nueva').length}</b><span class="det">Por llamar</span></div>
+    <div class="kpi"><small>En proceso</small><b>${todas.filter(a => a.Estado === 'En entrevista' || a.Estado === 'Aprobada').length}</b><span class="det">En entrevista o aprobadas</span></div>
+    <div class="kpi"><small>Perritos adoptados</small><b style="color:var(--esmeralda)">${todas.filter(a => a.Estado === 'Adoptado').length}</b><span class="det">Por medio del formulario</span></div>
+  </div>
+  <div class="panel">
+    <h2>Solicitudes de adopción
+      <select style="width:auto" onchange="vAdopciones.estado=this.value;vAdopciones()">${['En proceso', ...ESTADOS_ADOP, 'Todas'].map(f => `<option ${f === fe ? 'selected' : ''}>${f}</option>`).join('')}</select></h2>
+    ${lista.length ? `<div class="tabla-cont"><table><thead><tr><th>Perrito</th><th>Solicitante</th><th>Sector</th><th>Espacio · Mascotas</th><th>Llamar</th><th>Estado</th><th></th></tr></thead><tbody>
+    ${lista.map(a => { const pe = perros.find(p => p.ID === a.PerritoID) || {}; return `<tr>
+      <td><div class="mini-perro"><img src="${fotoUrl(pe.Foto1, 120)}" alt="" onerror="this.src=SIN_FOTO"><div><b>${esc(a.Perrito)}</b><br><span class="ayuda">${fechaCorta(a.FechaRegistro)}</span></div></div></td>
+      <td><b>${esc(a.Nombre)}</b><br><a class="enlace" href="https://wa.me/${telWa(a.Telefono)}" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i> ${esc(a.Telefono)}</a></td>
+      <td>${esc(a.Sector)}</td>
+      <td>Espacio: <b>${esc(a.Espacio)}</b><br><span class="ayuda">Mascotas: ${esc(a.OtrasMascotas)}${a.CualesMascotas ? ' (' + esc(a.CualesMascotas) + ')' : ''}</span></td>
+      <td><span class="ayuda">${esc(a.Horario)}</span></td>
+      <td><span class="chip ${CHIP_ADOP[a.Estado] || 'c-gris'}">${esc(a.Estado)}</span></td>
+      <td><div class="acc"><button class="btn ${a.Estado === 'Nueva' ? 'btn-nar' : 'btn-sec'} btn-mini" onclick="modalAdopcion('${esc(a.ID)}')"><i class="fa-solid fa-eye"></i> Ver</button></div></td>
+    </tr>`; }).join('')}</tbody></table></div>`
+    : `<div class="vacio"><i class="fa-solid fa-house-chimney"></i>${todas.length ? 'No hay solicitudes con este filtro.' : 'Todavía no hay solicitudes. Aparecerán aquí cuando alguien llene el formulario de adopción.'}</div>`}
+  </div>`;
+}
+
+function modalAdopcion(id) {
+  const a = (E.datos.adopciones || []).find(x => x.ID === id); if (!a) return;
+  const pe = (E.datos.perritos || []).find(p => p.ID === a.PerritoID) || {};
+  const otras = (E.datos.adopciones || []).filter(x => x.PerritoID === a.PerritoID && x.ID !== a.ID && enProceso(x)).length;
+  const msg = encodeURIComponent('Hola ' + String(a.Nombre).split(' ')[0] + ', te escribimos de JarabaRescata por tu solicitud para adoptar a ' + a.Perrito + ' 🐶');
+  abrirModal(`<div class="mini-perro" style="margin-bottom:12px"><img src="${fotoUrl(pe.Foto1, 160)}" alt="" style="width:60px;height:60px" onerror="this.src=SIN_FOTO">
+    <div><h3 style="margin:0">${esc(a.Nombre)}</h3><span class="ayuda">Quiere adoptar a <b>${esc(a.Perrito)}</b> · ${fechaCorta(a.FechaRegistro)}</span></div></div>
+  ${otras ? `<p class="ayuda" style="margin-bottom:10px"><i class="fa-solid fa-circle-info"></i> Hay ${otras} solicitud(es) más en proceso para ${esc(a.Perrito)}.</p>` : ''}
+  <table class="informe-tabla" style="margin-bottom:12px"><tbody>
+    <tr><td>Teléfono / WhatsApp</td><td>${esc(a.Telefono)}</td></tr>
+    <tr><td>Correo</td><td>${esc(a.Correo)}</td></tr>
+    <tr><td>Sector</td><td>${esc(a.Sector)}</td></tr>
+    <tr><td>¿Tiene espacio?</td><td>${esc(a.Espacio)}</td></tr>
+    <tr><td>¿Otras mascotas?</td><td>${esc(a.OtrasMascotas)}${a.CualesMascotas ? ' · ' + esc(a.CualesMascotas) : ''}</td></tr>
+    <tr><td>Horario para llamar</td><td>${esc(a.Horario)}</td></tr>
+  </tbody></table>
+  <div style="background:var(--nar-claro);border-radius:12px;padding:10px 12px;margin-bottom:12px"><b style="color:var(--naranja-osc)">¿Por qué quiere adoptar a ${esc(a.Perrito)}?</b>
+    <p style="white-space:pre-line;margin-top:4px">${esc(a.Motivo)}</p></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+    <a class="btn btn-prim btn-mini" href="https://wa.me/${telWa(a.Telefono)}?text=${msg}" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>
+    <a class="btn btn-sec btn-mini" href="tel:${esc(String(a.Telefono).replace(/[^\d+]/g, ''))}"><i class="fa-solid fa-phone"></i> Llamar</a>
+    <a class="btn btn-sec btn-mini" href="mailto:${esc(a.Correo)}"><i class="fa-solid fa-envelope"></i> Correo</a>
+  </div>
+  <div class="error-form oculto" id="mErr"></div>
+  <form id="fM">
+    <div class="campo"><label>Estado de la solicitud</label><select name="Estado">${opts(ESTADOS_ADOP, a.Estado)}</select>
+      <p class="ayuda">Al marcar <b>Adoptado</b>, ${esc(a.Perrito)} pasa a "Adoptado" y sale del catálogo.</p></div>
+    <div class="campo"><label>Notas de la entrevista (internas)</label><textarea name="Notas" rows="3" placeholder="Ej.: Se llamó el lunes, tiene patio cercado, visita el sábado">${esc(a.Notas || '')}</textarea></div>
+    <div class="pie"><button type="button" class="btn btn-sec" onclick="cerrarModal()">Cerrar</button><button class="btn btn-prim"><i class="fa-solid fa-floppy-disk"></i> Guardar</button></div>
+  </form>`);
+  $('fM').onsubmit = async e => {
+    e.preventDefault();
+    const d = Object.fromEntries(new FormData(e.target)); d.ID = id;
+    try { await accion('guardarAdopcion', d, 'Solicitud actualizada'); cerrarModal(); mostrar(E.vista); } catch (err) { errModal(err.message); }
+  };
+}
+
 // ===================== VISTA: PADRINOS =====================
 const CHIP_APAD = { Activo: 'c-verde', Pausado: 'c-nar', Finalizado: 'c-gris' };
 function vPadrinos() {
@@ -679,7 +758,7 @@ function vPadrinos() {
     ${lista.map(a => { const pe = perros.find(p => p.ID === a.PerritoID) || {}; const fuera = a.Estado !== 'Finalizado' && pe.Estado !== 'Disponible'; return `<tr>
       <td><div class="mini-perro"><img src="${fotoUrl(pe.Foto1, 120)}" alt="" onerror="this.src=SIN_FOTO"><div><b>${esc(a.Perrito)}</b>${fuera ? `<br><span class="chip c-rojo">${esc(pe.Estado || 'No encontrado')}</span>` : ''}</div></div></td>
       <td><b>${esc(a.Nombre)}</b><br><span class="ayuda">${esc(a.Correo)}</span></td>
-      <td>${esc(a.Modalidad)}</td><td>${esc(a.DiaDeposito)}<br><span class="ayuda">${esc(a.Metodo)}</span></td>
+      <td>${esc(a.Modalidad)}</td><td>${esc(a.DiaDeposito)}<br><span class="ayuda">${esc(metodoTxt(a))}</span></td>
       <td><div><span class="chip ${CHIP_APAD[a.Estado] || 'c-gris'}">${esc(a.Estado)}</span><br><span class="ayuda">Desde ${fechaCorta(a.FechaRegistro)}</span></div></td>
       <td class="monto">${rd(a.Monto)}</td>
       <td><div class="acc"><button class="btn btn-sec btn-mini" title="Informe del ahijado" onclick="modalInformePerrito('${esc(a.PerritoID)}')"><i class="fa-solid fa-file-pdf"></i></button>
@@ -699,6 +778,7 @@ function modalApadrinamiento(id) {
     <div class="campo"><label>Estado</label><select name="Estado">${opts(['Activo', 'Pausado', 'Finalizado'], a.Estado)}</select></div>
     <div class="campo"><label>Día de depósito</label><select name="DiaDeposito">${opts(['15 de cada mes', 'Fin de mes'], a.DiaDeposito)}</select></div>
     <div class="campo col2"><label>Método de pago</label><select name="Metodo">${opts(METODOS_SUSC, a.Metodo)}</select></div>
+    ${campoPunto(a.Metodo, a.PuntoEntrega)}
     <div class="campo col2"><label>Transferir a otro perrito (opcional)</label><select name="PerritoID" id="mDest">
       <option value="">— Mantener con ${esc(a.Perrito)} —</option>
       ${destinos.map(p => `<option value="${esc(p.ID)}">${esc(p.Nombre)}</option>`).join('')}</select>
@@ -711,6 +791,7 @@ function modalApadrinamiento(id) {
   <p class="ayuda" style="margin-bottom:8px"><i class="fa-solid fa-circle-info"></i> <b>Pausado</b> reserva el cupo del perrito. <b>Finalizado</b> lo libera para que otra persona pueda apadrinarlo.</p>
   <div class="pie"><button type="button" class="btn btn-sec" onclick="cerrarModal()">Cancelar</button><button class="btn btn-prim"><i class="fa-solid fa-floppy-disk"></i> Guardar</button></div></form>`);
   $('mDest').onchange = () => $('bAvisar').classList.toggle('oculto', !$('mDest').value);
+  ligarPunto();
   $('fM').onsubmit = async e => {
     e.preventDefault();
     const d = Object.fromEntries(new FormData(e.target)); d.ID = id; d.avisar = !!e.target.avisar.checked && !!d.PerritoID;
@@ -1081,7 +1162,7 @@ function vPagos() {
     ${lista.map(x => `<tr>
       <td><b>${esc(x.c.Nombre)}</b><br><span class="ayuda">${esc(x.c.Correo)}</span></td>
       <td><div>${rd(x.c.Monto)}<br>${x.c._tipo === 'Apadrinamiento' ? `<span class="chip c-turq"><i class="fa-solid fa-dog"></i> ${esc(x.c.Perrito)} · ${esc(x.c.Modalidad)}</span>` : '<span class="chip c-verde">Círculo</span>'}</div></td>
-      <td>${fechaCorta(x.vence)}</td><td>${esc(x.c.Metodo)}</td>
+      <td>${fechaCorta(x.vence)}</td><td>${esc(metodoTxt(x.c))}</td>
       <td><div><span class="chip ${CHIP_PAGO[x.estado]}">${x.estado}</span>${marcaCorreo(x.c.ID, m)}</div></td>
       <td class="monto">${x.pagado ? rd(x.pagado) : '—'}</td>
       <td><div class="acc">${x.estado !== 'Pagado' ? `<button class="btn btn-prim btn-mini" onclick="modalEntrada({${x.c._tipo === 'Apadrinamiento' ? 'apad' : 'colab'}:'${esc(x.c.ID)}',mes:'${m}'})"><i class="fa-solid fa-check"></i> Registrar pago</button>` : ''}
@@ -1115,7 +1196,7 @@ function modalRecordatorio(id, tipo = 'Círculo') {
   if (!correoOk(c.Correo)) return toast('No tiene correo registrado.', 4500);
   const prev = correosDe(id, E.mes, 'Recordatorio');
   abrirModal(`<h3>Enviar recordatorio</h3>
-  <p style="margin-bottom:10px">Se enviará un recordatorio amable a <b>${esc(c.Nombre)}</b> (${esc(c.Correo)}) por su aporte de <b>${rd(c.Monto)}</b>${tipo === 'Apadrinamiento' ? ' para <b>' + esc(c.Perrito) + '</b>' : ''} de ${nombreMes(E.mes)}, con los datos para depositar por ${esc(c.Metodo)}.</p>
+  <p style="margin-bottom:10px">Se enviará un recordatorio amable a <b>${esc(c.Nombre)}</b> (${esc(c.Correo)}) por su aporte de <b>${rd(c.Monto)}</b>${tipo === 'Apadrinamiento' ? ' para <b>' + esc(c.Perrito) + '</b>' : ''} de ${nombreMes(E.mes)}, con los datos ${c.Metodo === 'Entrega personal' ? 'de su punto de entrega (' + esc(metodoTxt(c)) + ')' : 'para depositar por ' + esc(c.Metodo)}.</p>
   ${prev.length ? `<p class="ayuda" style="margin-bottom:10px"><i class="fa-solid fa-circle-info"></i> Ya se le envió ${prev.length} recordatorio(s) este mes; el último el ${fechaCorta(prev[prev.length - 1].Fecha)}.</p>` : ''}
   <p class="ayuda">Remitente: ${esc(E.datos.remitente || CORREO_ESPERADO)}</p>
   <div class="error-form oculto" id="mErr" style="margin-top:10px"></div>
@@ -1151,7 +1232,7 @@ function vColaboradoresTabla() {
   const chip = { Activo: 'c-verde', Pausado: 'c-nar', Baja: 'c-gris' };
   $('tablaColab').innerHTML = lista.length ? `<div class="tabla-cont"><table><thead><tr><th>Nombre</th><th>Correo</th><th class="monto">Aporte</th><th>Depósito</th><th>Método</th><th>Desde</th><th>Estado</th><th></th></tr></thead><tbody>
   ${lista.map(c => `<tr><td><b>${esc(c.Nombre)}</b>${c.Notas ? `<br><span class="ayuda">${esc(c.Notas)}</span>` : ''}</td><td>${esc(c.Correo)}</td>
-    <td class="monto">${rd(c.Monto)}</td><td>${esc(c.DiaDeposito)}</td><td>${esc(c.Metodo)}</td><td>${fechaCorta(c.FechaRegistro)}</td>
+    <td class="monto">${rd(c.Monto)}</td><td>${esc(c.DiaDeposito)}</td><td>${esc(metodoTxt(c))}</td><td>${fechaCorta(c.FechaRegistro)}</td>
     <td><span class="chip ${chip[c.Estado] || 'c-gris'}">${esc(c.Estado)}</span></td>
     <td><div class="acc"><button class="btn btn-sec btn-mini" onclick="modalColaborador('${c.ID}')"><i class="fa-solid fa-pen"></i> Editar</button></div></td></tr>`).join('')}
   </tbody></table></div>` : '<div class="vacio"><i class="fa-solid fa-users"></i>No hay colaboradores con ese filtro.</div>';
@@ -1217,10 +1298,12 @@ function modalColaborador(id) {
     <div class="campo"><label>Aporte mensual (RD$)</label><input name="Monto" type="number" min="1" step="1" value="${esc(c.Monto)}"></div>
     <div class="campo"><label>Día de depósito</label><select name="DiaDeposito">${opts(['15 de cada mes', 'Fin de mes'], c.DiaDeposito)}</select></div>
     <div class="campo"><label>Método de pago</label><select name="Metodo">${opts(METODOS_SUSC, c.Metodo)}</select></div>
+    ${campoPunto(c.Metodo, c.PuntoEntrega)}
     <div class="campo"><label>Estado</label><select name="Estado">${opts(['Activo', 'Pausado', 'Baja'], c.Estado)}</select></div>
     <div class="campo col2"><label>Notas internas</label><textarea name="Notas">${esc(c.Notas || '')}</textarea></div>
   </div>
   <div class="pie"><button type="button" class="btn btn-sec" onclick="cerrarModal()">Cancelar</button><button class="btn btn-prim"><i class="fa-solid fa-floppy-disk"></i> Guardar</button></div></form>`);
+  ligarPunto();
   $('fM').onsubmit = async e => {
     e.preventDefault();
     const d = Object.fromEntries(new FormData(e.target)); if (id) d.ID = id;
@@ -1552,14 +1635,20 @@ const DEMO = (() => {
     Ap('A-2', 'Rosa Taveras', 'rosa@ejemplo.com', 'P-3', 'Luna', 'Alimento mensual', 500, 'Activo'),
     Ap('A-3', 'Carlos Méndez', 'carlos@ejemplo.com', 'P-2', 'Bruno', 'Alimento mensual', 500, 'Pausado')
   ];
-  return { hoy: h, colaboradores, entradas, salidas, donaciones, perritos, apadrinamientos, correos: [], bitacora: [{ Fecha: h + ' 08:00', Usuario: 'demo', Accion: 'Inicio de sesión', Detalle: '' }],
+  const adopciones = [
+    { ID: 'AD-1', FechaRegistro: m + '-06 10:15', PerritoID: 'P-2', Perrito: 'Bruno', Nombre: 'Rosa Taveras', Telefono: '809-555-1234', Correo: 'rosa@ejemplo.com', Sector: 'Pinar Quemado',
+      Espacio: 'Sí', OtrasMascotas: 'Sí', CualesMascotas: 'Un gato', Motivo: 'Mis hijos lo vieron en Instagram y nos enamoramos de él. Tenemos patio cercado.', Horario: 'Tarde (12:00 m. a 5:00 p. m.)', Estado: 'Nueva', Notas: '' },
+    { ID: 'AD-2', FechaRegistro: m + '-02 18:40', PerritoID: 'P-1', Perrito: 'Canela', Nombre: 'Pedro Almonte', Telefono: '829-555-9876', Correo: 'pedro@ejemplo.com', Sector: 'Buena Vista',
+      Espacio: 'Sí', OtrasMascotas: 'No', CualesMascotas: '', Motivo: 'Vivo solo y quiero una compañera.', Horario: 'Noche (5:00 p. m. a 8:00 p. m.)', Estado: 'En entrevista', Notas: 'Se llamó el martes.' }
+  ];
+  return { hoy: h, colaboradores, entradas, salidas, donaciones, perritos, apadrinamientos, adopciones, correos: [], bitacora: [{ Fecha: h + ' 08:00', Usuario: 'demo', Accion: 'Inicio de sesión', Detalle: '' }],
     usuarios: [{ usuario: 'juana', nombre: 'Juana Paulino', rol: 'Administrador', estado: 'Activo', fecha: p + '-01' }] };
 })();
 
 async function demoApi(action, d) {
   await new Promise(r => setTimeout(r, 250));
   const D = DEMO, ses = { usuario: 'juana', nombre: 'Juana Paulino (demo)', rol: 'Administrador' };
-  const todo = (aviso) => ({ ok: true, sesion: ses, hoy: D.hoy, colaboradores: D.colaboradores, entradas: D.entradas, salidas: D.salidas, bitacora: D.bitacora, correos: D.correos, donaciones: D.donaciones, perritos: D.perritos, apadrinamientos: D.apadrinamientos, remitente: 'juana107@gmail.com', aviso });
+  const todo = (aviso) => ({ ok: true, sesion: ses, hoy: D.hoy, colaboradores: D.colaboradores, entradas: D.entradas, salidas: D.salidas, bitacora: D.bitacora, correos: D.correos, donaciones: D.donaciones, perritos: D.perritos, apadrinamientos: D.apadrinamientos, adopciones: D.adopciones, remitente: 'juana107@gmail.com', aviso });
   const ahora = D.hoy + ' ' + new Date().toTimeString().slice(0, 5);
   const id = p => p + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();
   switch (action) {
@@ -1586,9 +1675,15 @@ async function demoApi(action, d) {
       if ((c || ap) && d.enviarGracias === 'on') { const q = c || ap; D.correos.push({ Fecha: ahora, Tipo: 'Agradecimiento', ColaboradorID: q.ID, MesAporte: d.MesAporte }); return todo('Entrada registrada y agradecimiento enviado a ' + q.Correo + ' (demo)'); }
       return todo();
     }
+    case 'guardarAdopcion': {
+      const a = D.adopciones.find(x => x.ID === d.ID); const antes = a.Estado;
+      Object.assign(a, { Estado: d.Estado, Notas: d.Notas });
+      if (d.Estado === 'Adoptado' && antes !== 'Adoptado') { const pe = D.perritos.find(x => x.ID === a.PerritoID); if (pe) pe.Estado = 'Adoptado'; return todo('¡' + a.Perrito + ' fue adoptado! Ya no aparecerá en el catálogo. (demo)'); }
+      return todo();
+    }
     case 'guardarApadrinamiento': {
       const a = D.apadrinamientos.find(x => x.ID === d.ID);
-      Object.assign(a, { Estado: d.Estado, DiaDeposito: d.DiaDeposito, Metodo: d.Metodo, Notas: d.Notas });
+      Object.assign(a, { Estado: d.Estado, DiaDeposito: d.DiaDeposito, Metodo: d.Metodo, Notas: d.Notas, PuntoEntrega: d.Metodo === 'Entrega personal' ? d.PuntoEntrega : '' });
       if (d.PerritoID) { const pe = D.perritos.find(x => x.ID === d.PerritoID); a.PerritoID = pe.ID; a.Perrito = pe.Nombre; return todo('Apadrinamiento transferido a ' + pe.Nombre + (d.avisar ? ' y aviso enviado (demo)' : '')); }
       return todo();
     }
