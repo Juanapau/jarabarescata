@@ -653,7 +653,7 @@ function modalPerrito(id) {
     <div class="campo"><label>Tamaño</label><select name="Tamano">${opts(['Pequeño', 'Mediano', 'Grande'], p.Tamano)}</select></div>
     <div class="campo col2"><label>Edad aproximada</label><input name="Edad" value="${esc(p.Edad || '')}" placeholder="Ej.: 2 años, cachorro de 4 meses" maxlength="40"></div>
     <div class="campo col2"><label>Historia <span class="ayuda" id="cuentaHist" style="font-weight:600"></span></label>
-      <textarea name="Historia" id="mHist" rows="5" maxlength="1200" placeholder="¿Dónde lo encontraron, cómo está, qué necesita, cómo es su carácter?" required>${esc(p.Historia || '')}</textarea></div>
+      <textarea name="Historia" id="mHist" rows="7" maxlength="2000" placeholder="¿Dónde lo encontraron, cómo está, qué necesita, cómo es su carácter?" required>${esc(p.Historia || '')}</textarea></div>
     <div class="campo col2"><label>Foto principal</label>
       <div class="subir-foto"><img id="prev1" src="${fotoUrl(p.Foto1, 300)}" alt=""><div class="der">
         <input type="file" id="mFoto1" accept="image/*"><p class="ayuda">${p.Foto1 ? 'Elige otra solo si quieres cambiarla.' : 'Obligatoria. Se ve en el catálogo.'}</p></div></div></div>
@@ -668,7 +668,7 @@ function modalPerrito(id) {
   </div>
   <p class="ayuda" style="margin-bottom:8px"><i class="fa-solid fa-circle-info"></i> Solo los perritos <b>Disponibles</b> y marcados para mostrar aparecerán en el catálogo para apadrinar.</p>
   <div class="pie"><button type="button" class="btn btn-sec" onclick="cerrarModal()">Cancelar</button><button class="btn btn-prim"><i class="fa-solid fa-floppy-disk"></i> Guardar</button></div></form>`);
-  const contar = () => $('cuentaHist').textContent = '(' + $('mHist').value.length + '/1200)';
+  const contar = () => $('cuentaHist').textContent = '(' + $('mHist').value.length + '/2000)';
   $('mHist').oninput = contar; contar();
   ['1', '2'].forEach(n => $('mFoto' + n).onchange = e => { const f = e.target.files[0]; if (f) $('prev' + n).src = URL.createObjectURL(f); });
   $('fM').onsubmit = async e => {
