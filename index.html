@@ -567,7 +567,7 @@ function vResumen() {
   </div>
   <div class="panel">
     <h2>Donaciones únicas <button class="btn btn-sec btn-mini" onclick="mostrar('donaciones')"><i class="fa-solid fa-hand-holding-heart"></i> Ver donaciones</button></h2>
-    <p>Recibido en ${nombreMes(m)}: <b>${rd(suma(unicasMes))}</b> (${unicasMes.length} donación${unicasMes.length === 1 ? '' : 'es'})
+    <p>Recibido en ${nombreMes(m)}: <b>${rd(suma(unicasMes))}</b> (${unicasMes.length} ${unicasMes.length === 1 ? 'donación' : 'donaciones'})
       · Por confirmar: <b>${donPend.length}</b>${donPend.length ? ' (' + rd(suma(donPend)) + ')' : ''}</p>
   </div>
   <div class="panel">
@@ -598,7 +598,7 @@ function vDonaciones() {
   $('vista').innerHTML = `
   <div class="kpis">
     <div class="kpi"><small>Registradas en el mes</small><b>${delM.length}</b><span class="det">Prometido: ${rd(suma(delM))}</span></div>
-    <div class="kpi"><small>Recibido en el mes</small><b style="color:var(--esmeralda)">${rd(suma(recibidas))}</b><span class="det">${recibidas.length} donación${recibidas.length === 1 ? '' : 'es'} confirmada${recibidas.length === 1 ? '' : 's'}</span></div>
+    <div class="kpi"><small>Recibido en el mes</small><b style="color:var(--esmeralda)">${rd(suma(recibidas))}</b><span class="det">${recibidas.length} ${recibidas.length === 1 ? 'donación confirmada' : 'donaciones confirmadas'}</span></div>
     <div class="kpi"><small>Por confirmar</small><b style="color:var(--naranja-osc)">${pend.length}</b><span class="det">${rd(suma(pend))} de todos los meses</span></div>
   </div>
   <div class="panel">
