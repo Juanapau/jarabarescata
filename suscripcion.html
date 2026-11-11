@@ -250,6 +250,10 @@
           <option value="Entrega personal">Entrega personal (efectivo)</option>
         </select>
       </div>
+      <div class="campo">
+        <label id="mencionLbl"><i class="fa-solid fa-bullhorn"></i> ¿Te gustaría ser mencionado/a en las actualizaciones de tu ahijado?</label>
+        <div class="opciones-si-no"><label><input type="radio" name="mencionA" value="Sí"> Sí</label><label><input type="radio" name="mencionA" value="No"> No</label></div>
+      </div>
       <button class="boton turq" type="submit" id="enviarA"><i class="fa-solid fa-dog"></i> Confirmar apadrinamiento</button>
     </form>
 
@@ -642,6 +646,7 @@ function elegirModalidad(id) {
   elegido = { perrito: p, modalidad: sel.value };
   cerrarFicha();
   try { const u = new URL(location.href); u.searchParams.set('perrito', p.ID); history.replaceState(null, '', u); } catch (e) {}
+  $('mencionLbl').innerHTML = '<i class="fa-solid fa-bullhorn"></i> ¿Te gustaría ser mencionado/a en las actualizaciones de tu ' + (p.Sexo === 'Hembra' ? 'ahijada' : 'ahijado') + '?';
   $('elegido').innerHTML = `<img src="${fotoUrl(p.Foto1, 200)}" alt="" onerror="this.src=SIN_FOTO">
     <div><small>Vas a apadrinar a</small><b>${esc(p.Nombre)}</b><small>${esc(sel.value)} · ${rd(CAT.montos[sel.value])} al mes</small></div>`;
   $('vApadrinar').style.display = 'none'; $('formApad').style.display = 'block'; $('alerta').classList.remove('ver');
@@ -664,13 +669,15 @@ $('formApad').addEventListener('submit', async e => {
     perritoID: elegido.perrito.ID, modalidad: elegido.modalidad,
     nombre: $('nombreA').value.trim().replace(/\s+/g, ' '),
     correo: $('correoA').value.trim().toLowerCase(),
-    dia: $('diaA').value, metodo: $('metodoA').value, punto: puntoDe('pApad')
+    dia: $('diaA').value, metodo: $('metodoA').value, punto: puntoDe('pApad'),
+    mencionar: (document.querySelector('input[name="mencionA"]:checked') || {}).value || ''
   };
   if (d.nombre.split(' ').length < 2) return mostrarError('Escribe tu nombre completo (nombre y apellido).');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.correo)) return mostrarError('Revisa tu correo electrónico.');
   if (!d.dia) return mostrarError('Selecciona el día para depositar.');
   if (!d.metodo) return mostrarError('Selecciona el método de pago.');
   if (d.metodo === 'Entrega personal' && !d.punto) return mostrarError('Elige a quién le entregarás tu aporte.');
+  if (!d.mencionar) return mostrarError('Indica si te gustaría ser mencionado/a en las actualizaciones.');
   const btn = $('enviarA');
   btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
   try {
