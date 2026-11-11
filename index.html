@@ -757,7 +757,8 @@ function vPadrinos() {
     ${lista.length ? `<div class="tabla-cont"><table><thead><tr><th>Perrito</th><th>Padrino</th><th>Modalidad</th><th>Depósito</th><th>Estado</th><th class="monto">Mensual</th><th></th></tr></thead><tbody>
     ${lista.map(a => { const pe = perros.find(p => p.ID === a.PerritoID) || {}; const fuera = a.Estado !== 'Finalizado' && pe.Estado !== 'Disponible'; return `<tr>
       <td><div class="mini-perro"><img src="${fotoUrl(pe.Foto1, 120)}" alt="" onerror="this.src=SIN_FOTO"><div><b>${esc(a.Perrito)}</b>${fuera ? `<br><span class="chip c-rojo">${esc(pe.Estado || 'No encontrado')}</span>` : ''}</div></div></td>
-      <td><b>${esc(a.Nombre)}</b><br><span class="ayuda">${esc(a.Correo)}</span></td>
+      <td><b>${esc(a.Nombre)}</b><br><span class="ayuda">${esc(a.Correo)}</span>
+        ${a.Mencionar === 'Sí' ? '<br><span class="chip c-verde"><i class="fa-solid fa-bullhorn"></i> Mencionar</span>' : a.Mencionar === 'No' ? '<br><span class="chip c-gris"><i class="fa-solid fa-user-secret"></i> No mencionar</span>' : ''}</td>
       <td>${esc(a.Modalidad)}</td><td>${esc(a.DiaDeposito)}<br><span class="ayuda">${esc(metodoTxt(a))}</span></td>
       <td><div><span class="chip ${CHIP_APAD[a.Estado] || 'c-gris'}">${esc(a.Estado)}</span><br><span class="ayuda">Desde ${fechaCorta(a.FechaRegistro)}</span></div></td>
       <td class="monto">${rd(a.Monto)}</td>
@@ -779,6 +780,8 @@ function modalApadrinamiento(id) {
     <div class="campo"><label>Día de depósito</label><select name="DiaDeposito">${opts(['15 de cada mes', 'Fin de mes'], a.DiaDeposito)}</select></div>
     <div class="campo col2"><label>Método de pago</label><select name="Metodo">${opts(METODOS_SUSC, a.Metodo)}</select></div>
     ${campoPunto(a.Metodo, a.PuntoEntrega)}
+    <div class="campo col2"><label>¿Mencionarle en las actualizaciones de ${esc(a.Perrito)}?</label>
+      <select name="Mencionar"><option value="" ${a.Mencionar ? '' : 'selected'}>— No indicó —</option>${opts(['Sí', 'No'], a.Mencionar)}</select></div>
     <div class="campo col2"><label>Transferir a otro perrito (opcional)</label><select name="PerritoID" id="mDest">
       <option value="">— Mantener con ${esc(a.Perrito)} —</option>
       ${destinos.map(p => `<option value="${esc(p.ID)}">${esc(p.Nombre)}</option>`).join('')}</select>
@@ -1629,11 +1632,11 @@ const DEMO = (() => {
     Pe('P-2', 'Bruno', 'Macho', 'Cachorro de 5 meses', 'Pequeño', 'Rescatado de un solar con sus hermanos. Juguetón y curioso, necesita sus vacunas completas.', fotoDemo('#16845B', '#e5f4ec', '🐶'), ''),
     Pe('P-3', 'Luna', 'Hembra', '4 años', 'Grande', 'Fue atropellada y la operamos de una pata. Ya camina y encontró hogar con una familia del pueblo.', fotoDemo('#25A9A0', '#e3f5f3', '🦮'), '', 'Adoptado', 'No')
   ];
-  const Ap = (id, n, c, pid, pn, mo, monto, est) => ({ ID: id, FechaRegistro: p + '-12', Nombre: n, Correo: c, PerritoID: pid, Perrito: pn, Modalidad: mo, Monto: monto, DiaDeposito: '15 de cada mes', Metodo: 'PayPal', Estado: est, Notas: '' });
+  const Ap = (id, n, c, pid, pn, mo, monto, est, men = 'Sí') => ({ ID: id, FechaRegistro: p + '-12', Nombre: n, Correo: c, PerritoID: pid, Perrito: pn, Modalidad: mo, Monto: monto, DiaDeposito: '15 de cada mes', Metodo: 'PayPal', Estado: est, Notas: '', Mencionar: men });
   const apadrinamientos = [
     Ap('A-1', 'Ana Lucía Fernández', 'ana@ejemplo.com', 'P-1', 'Canela', 'Atención veterinaria', 500, 'Activo'),
     Ap('A-2', 'Rosa Taveras', 'rosa@ejemplo.com', 'P-3', 'Luna', 'Alimento mensual', 500, 'Activo'),
-    Ap('A-3', 'Carlos Méndez', 'carlos@ejemplo.com', 'P-2', 'Bruno', 'Alimento mensual', 500, 'Pausado')
+    Ap('A-3', 'Carlos Méndez', 'carlos@ejemplo.com', 'P-2', 'Bruno', 'Alimento mensual', 500, 'Pausado', 'No')
   ];
   const adopciones = [
     { ID: 'AD-1', FechaRegistro: m + '-06 10:15', PerritoID: 'P-2', Perrito: 'Bruno', Nombre: 'Rosa Taveras', Telefono: '809-555-1234', Correo: 'rosa@ejemplo.com', Sector: 'Pinar Quemado',
@@ -1683,6 +1686,7 @@ async function demoApi(action, d) {
     }
     case 'guardarApadrinamiento': {
       const a = D.apadrinamientos.find(x => x.ID === d.ID);
+      if (d.Mencionar) a.Mencionar = d.Mencionar;
       Object.assign(a, { Estado: d.Estado, DiaDeposito: d.DiaDeposito, Metodo: d.Metodo, Notas: d.Notas, PuntoEntrega: d.Metodo === 'Entrega personal' ? d.PuntoEntrega : '' });
       if (d.PerritoID) { const pe = D.perritos.find(x => x.ID === d.PerritoID); a.PerritoID = pe.ID; a.Perrito = pe.Nombre; return todo('Apadrinamiento transferido a ' + pe.Nombre + (d.avisar ? ' y aviso enviado (demo)' : '')); }
       return todo();
