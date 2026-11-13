@@ -133,6 +133,12 @@ main{flex:1;margin-left:236px;padding:22px 26px 90px;min-width:0}
 .cob span{display:flex;gap:6px;align-items:center}
 .cob .libre{color:#b26a12}.cob .ok{color:var(--esmeralda)}
 .mini-perro{display:flex;gap:10px;align-items:center}
+.chip-lectura{display:inline-flex;align-items:center;gap:6px;background:var(--turq-claro);color:#17766f;border-radius:20px;padding:4px 12px;font-weight:800;font-size:.78rem;margin-left:10px;vertical-align:middle;font-family:'Nunito',sans-serif}
+.rejilla3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.cnum{font-family:'Baloo 2';font-size:1.6rem;line-height:1}
+.leyenda{display:flex;gap:14px;font-size:.8rem;font-weight:700;color:var(--suave);margin-bottom:8px}
+.leyenda span::before{content:'';display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px;background:var(--c)}
+@media (max-width:860px){.rejilla3{grid-template-columns:1fr}.chip-lectura{margin:6px 0 0}}
 .cuentas{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
 .cuentas div{background:#fff;border-radius:10px;padding:8px 10px}
 .cuentas small{display:block;font-size:.7rem;font-weight:800;color:var(--suave);text-transform:uppercase;letter-spacing:.03em}
@@ -284,6 +290,7 @@ body{-webkit-tap-highlight-color:transparent}
     </div>
     <nav id="menu">
       <button data-vista="resumen" class="activo"><i class="fa-solid fa-chart-pie"></i> Resumen</button>
+      <button data-vista="finanzas" class="oculto"><i class="fa-solid fa-scale-balanced"></i> Finanzas</button>
       <button data-vista="pagos"><i class="fa-solid fa-calendar-check"></i> Control de pagos</button>
       <button data-vista="donaciones"><i class="fa-solid fa-hand-holding-heart"></i> Donaciones únicas</button>
       <button data-vista="perritos"><i class="fa-solid fa-dog"></i> Perritos</button>
@@ -307,7 +314,7 @@ body{-webkit-tap-highlight-color:transparent}
   <main>
     <div class="demo-aviso oculto" id="avisoDemo"><i class="fa-solid fa-flask"></i> <b>Modo demostración:</b> datos de ejemplo, no se guarda nada. Pega la URL de tu Apps Script en <code>API_URL</code> para usar el sistema real.</div>
     <div class="barra">
-      <h1 id="tituloVista">Resumen</h1>
+      <h1><span id="tituloVista">Resumen</span><span class="chip-lectura oculto" id="chipLectura"><i class="fa-solid fa-eye"></i> Solo lectura</span></h1>
       <div class="der">
         <div class="selector-mes" id="selMes">
           <button onclick="moverMes(-1)" aria-label="Mes anterior"><i class="fa-solid fa-chevron-left"></i></button>
@@ -406,7 +413,7 @@ async function iniciar() {
     const r = await api('estado');
     $('msgCargandoAcceso').classList.add('oculto');
     $(r.hayUsuarios ? 'fLogin' : 'fPrimer').classList.remove('oculto');
-    if (!API_URL) errorAcceso('Modo demostración: escribe cualquier usuario y contraseña.');
+    if (!API_URL) errorAcceso('Modo demostración: escribe cualquier usuario y contraseña (usa "consulta" para ver la vista de solo lectura).');
   } catch (e) {
     $('msgCargandoAcceso').innerHTML = '<span style="color:var(--rojo)">No se pudo conectar con el sistema. Revisa la URL y tu conexión.</span>';
   }
@@ -441,6 +448,15 @@ function entrarApp() {
   $('acceso').classList.add('oculto'); $('app').classList.remove('oculto');
   $('ubNombre').textContent = E.sesion.nombre; $('ubRol').textContent = E.sesion.rol;
   $('menuUsuarios').classList.toggle('oculto', E.sesion.rol !== 'Administrador');
+  const consulta = esConsulta();
+  const vistasConsulta = ['resumen', 'finanzas', 'perritos', 'informes'];
+  document.querySelectorAll('#menu button').forEach(b => {
+    if (b.id === 'menuUsuarios') return;
+    b.classList.toggle('oculto', consulta ? vistasConsulta.indexOf(b.dataset.vista) < 0 : b.dataset.vista === 'finanzas');
+  });
+  if (consulta) $('menuUsuarios').classList.add('oculto');
+  $('chipLectura').classList.toggle('oculto', !consulta);
+  if (consulta && vistasConsulta.indexOf(E.vista) < 0) E.vista = 'resumen';
   if (!E.mes) E.mes = (E.datos.hoy || hoyLocal()).slice(0, 7);
   mostrar(E.vista);
 }
@@ -455,7 +471,7 @@ function aplicarDatos(r) { E.datos = r; if (r.sesion) E.sesion = r.sesion; }
 async function recargar() { try { await accion('datos', {}, 'Datos actualizados'); mostrar(E.vista); } catch (e) { toast(e.message); } }
 
 // ===================== NAVEGACIÓN =====================
-const TITULOS = { resumen: 'Resumen', pagos: 'Control de pagos', donaciones: 'Donaciones únicas', perritos: 'Perritos', padrinos: 'Padrinos', adopciones: 'Adopciones', colaboradores: 'Colaboradores', entradas: 'Entradas', salidas: 'Salidas', informes: 'Informes', usuarios: 'Usuarios' };
+const TITULOS = { finanzas: 'Finanzas', resumen: 'Resumen', pagos: 'Control de pagos', donaciones: 'Donaciones únicas', perritos: 'Perritos', padrinos: 'Padrinos', adopciones: 'Adopciones', colaboradores: 'Colaboradores', entradas: 'Entradas', salidas: 'Salidas', informes: 'Informes', usuarios: 'Usuarios' };
 $('menu').addEventListener('click', e => { const b = e.target.closest('button'); if (b) mostrar(b.dataset.vista); });
 
 function moverMes(d) {
@@ -471,6 +487,7 @@ function mostrar(v) {
   $('tituloVista').textContent = TITULOS[v];
   $('txtMes').textContent = nombreMes(E.mes);
   $('selMes').style.visibility = (v === 'colaboradores' || v === 'usuarios' || v === 'perritos' || v === 'padrinos' || v === 'adopciones') ? 'hidden' : 'visible';
+  if (esConsulta()) return ({ resumen: cResumen, finanzas: cFinanzas, perritos: cPerritos, informes: vInformes })[v] ? (({ resumen: cResumen, finanzas: cFinanzas, perritos: cPerritos, informes: vInformes })[v](), window.scrollTo(0, 0)) : mostrar('resumen');
   ({ resumen: vResumen, pagos: vPagos, donaciones: vDonaciones, perritos: vPerritos, padrinos: vPadrinos, adopciones: vAdopciones, colaboradores: vColaboradores, entradas: vEntradas, salidas: vSalidas, informes: vInformes, usuarios: vUsuarios })[v]();
   window.scrollTo(0, 0);
 }
@@ -1484,7 +1501,152 @@ function vInformes() {
     <h3 style="color:var(--turquesa);margin:18px 0 6px">Detalle de gastos</h3>
     ${d.sal.length ? `<div class="tabla-cont"><table class="informe-tabla"><thead><tr><th>Fecha</th><th>Categoría</th><th>Descripción</th><th>Monto</th></tr></thead><tbody>
       ${d.sal.map(s => `<tr><td>${fechaCorta(s.Fecha)}</td><td>${esc(s.Categoria)}</td><td>${esc(s.Descripcion)}</td><td>${rd(s.Monto)}</td></tr>`).join('')}</tbody></table></div>` : '<p class="ayuda">Sin gastos.</p>'}
+  </div>
+  ${esConsulta() ? `<div class="panel"><h2>Informe del ahijado</h2>
+    <p class="ayuda" style="margin-bottom:12px">Elige un perrito para descargar su informe: lo que recibió de sus padrinos y en qué se invirtió.</p>
+    <div class="filtros"><select id="cPerro">${(E.datos.perritos || []).slice().sort((a, b) => a.Nombre.localeCompare(b.Nombre)).map(p => `<option value="${esc(p.ID)}">${esc(p.Nombre)}</option>`).join('')}</select>
+      <select id="cPer"><option value="mes">Solo ${nombreMes(m)}</option><option value="todo">Todo su historial</option></select>
+      <button class="btn btn-prim" onclick="bajarInformePerrito($('cPerro').value, $('cPer').value === 'todo' ? null : E.mes)" ${(E.datos.perritos || []).length ? '' : 'disabled'}><i class="fa-solid fa-file-arrow-down"></i> Descargar PDF</button></div></div>` : ''}`;
+}
+
+// ===================== VISTA DE CONSULTA (solo lectura) =====================
+const esConsulta = () => !!(E.sesion && E.sesion.rol === 'Consulta');
+
+async function bajarInformePerrito(pid, mes) {
+  if (!pid) return;
+  try { cargando(true); const r = await pdfPerrito(pid, mes); r.doc.save(r.archivo); } catch (err) { toast(err.message); } finally { cargando(false); }
+}
+
+function graficoSeisMeses(m) {
+  const meses = []; let [a, mm] = m.split('-').map(Number);
+  for (let i = 5; i >= 0; i--) { let y = a, x = mm - i; while (x < 1) { x += 12; y--; } meses.push(y + '-' + String(x).padStart(2, '0')); }
+  const datos = meses.map(k => ({ k, e: suma(delMes(activas(E.datos.entradas), k)), s: suma(delMes(activas(E.datos.salidas), k)) }));
+  const max = Math.max(1, ...datos.map(d => Math.max(d.e, d.s)));
+  const H = 130, base = 150, paso = 65;
+  return `<div class="leyenda"><span style="--c:var(--esmeralda)">Entradas</span><span style="--c:var(--naranja)">Salidas</span></div>
+  <svg viewBox="0 0 420 180" width="100%" role="img" aria-label="Entradas y salidas de los últimos 6 meses">
+    <line x1="10" y1="${base}" x2="410" y2="${base}" stroke="#eadfc8"/>
+    ${datos.map((d, i) => { const x = 22 + i * paso, he = Math.round(d.e / max * H), hs = Math.round(d.s / max * H); return `
+      <rect x="${x}" y="${base - he}" width="22" height="${he}" rx="4" fill="#16845B"><title>Entradas ${nombreMes(d.k)}: ${rd(d.e)}</title></rect>
+      <rect x="${x + 24}" y="${base - hs}" width="22" height="${hs}" rx="4" fill="#F39A35"><title>Salidas ${nombreMes(d.k)}: ${rd(d.s)}</title></rect>
+      <text x="${x + 23}" y="${base + 16}" text-anchor="middle" font-size="11" font-family="Nunito" fill="${d.k === m ? '#1d3b30' : '#5b6f66'}" font-weight="${d.k === m ? 800 : 600}">${MESES[+d.k.slice(5) - 1].slice(0, 3)}</text>`; }).join('')}
+  </svg>`;
+}
+
+function cResumen() {
+  const m = E.mes, b = balance(m);
+  const ent = delMes(activas(E.datos.entradas), m);
+  const circ = suma(ent.filter(x => x.Tipo === 'Aporte Círculo')), pad = suma(ent.filter(x => x.Tipo === 'Apadrinamiento')), uni = ent.filter(x => x.Tipo === 'Donación única');
+  const colAct = E.datos.colaboradores.filter(c => c.Estado === 'Activo');
+  const epC = estadoPagos(m, 'Círculo').filter(x => x.c.Estado === 'Activo'), alDiaC = epC.filter(x => x.estado === 'Pagado').length;
+  const padAct = (E.datos.apadrinamientos || []).filter(a => a.Estado === 'Activo');
+  const disp = (E.datos.perritos || []).filter(p => p.Estado === 'Disponible');
+  const completos = disp.filter(p => { const c = cobertura(p.ID); return c.alimento && c.veterinaria; }).length;
+  const adop = E.datos.adopciones || [];
+  const cats = {}; delMes(activas(E.datos.salidas), m).forEach(s => cats[s.Categoria] = (cats[s.Categoria] || 0) + Number(s.Monto));
+  const catOrden = Object.entries(cats).sort((a, b) => b[1] - a[1]), maxC = catOrden.length ? catOrden[0][1] : 1;
+  const pct = (a, t) => t ? Math.round(a / t * 100) : 0;
+  $('vista').innerHTML = `
+  <div class="kpis">
+    <div class="kpi k-ent"><i class="fa-solid fa-circle-arrow-down fondo"></i><small>Entradas del mes</small><b style="color:var(--esmeralda)">${rd(b.entradas)}</b><span class="det">Círculo ${rd(circ)} · Padrinos ${rd(pad)} · Únicas ${rd(suma(uni))}</span></div>
+    <div class="kpi k-sal"><i class="fa-solid fa-circle-arrow-up fondo"></i><small>Salidas del mes</small><b style="color:var(--naranja-osc)">${rd(b.salidas)}</b><span class="det">${delMes(activas(E.datos.salidas), m).length} gastos registrados</span></div>
+    <div class="kpi k-bal"><i class="fa-solid fa-scale-balanced fondo"></i><small>Balance del mes</small><b style="color:${b.balanceMes < 0 ? 'var(--rojo)' : 'var(--turquesa)'}">${rd(b.balanceMes)}</b><span class="det">Entradas − salidas</span></div>
+    <div class="kpi k-acu"><i class="fa-solid fa-piggy-bank fondo"></i><small>Saldo disponible</small><b>${rd(b.saldoFinal)}</b><span class="det">Al cierre de ${nombreMes(m)}</span></div>
+  </div>
+  <div class="rejilla3">
+    <div class="panel"><h2>Círculo de Patitas</h2>
+      <span class="cnum">${colAct.length}</span><p class="ayuda">colaboradores activos · compromiso ${rd(suma(colAct))}/mes</p>
+      <p style="margin-top:10px;font-weight:700">Al día este mes: ${alDiaC} de ${epC.length} (${pct(alDiaC, epC.length)}%)</p>
+      <div class="progreso"><div style="width:${pct(alDiaC, epC.length)}%"></div></div></div>
+    <div class="panel"><h2>Padrinos</h2>
+      <span class="cnum">${padAct.length}</span><p class="ayuda">padrinos activos · compromiso ${rd(suma(padAct))}/mes</p>
+      <p style="margin-top:10px;font-weight:700">Perritos con todo cubierto: ${completos} de ${disp.length}</p>
+      <div class="progreso"><div style="width:${pct(completos, disp.length)}%;background:var(--turquesa)"></div></div></div>
+    <div class="panel"><h2>Adopciones</h2>
+      <span class="cnum">${adop.filter(a => ['Nueva', 'En entrevista', 'Aprobada'].indexOf(a.Estado) >= 0).length}</span><p class="ayuda">solicitudes en proceso</p>
+      <p style="margin-top:10px;font-weight:700"><i class="fa-solid fa-house-chimney" style="color:var(--esmeralda)"></i> ${(n => n + (n === 1 ? ' perrito adoptado' : ' perritos adoptados'))((E.datos.perritos || []).filter(p => p.Estado === 'Adoptado').length)}</p>
+      <p class="ayuda" style="margin-top:6px">Donaciones únicas del mes: ${uni.length} (${rd(suma(uni))})</p></div>
+  </div>
+  <div class="rejilla2">
+    <div class="panel"><h2>Entradas y salidas · últimos 6 meses</h2>${graficoSeisMeses(m)}</div>
+    <div class="panel"><h2>¿En qué se invirtió?</h2>
+      ${catOrden.length ? catOrden.map(([c, v]) => `<div class="barra-cat"><div class="fila"><span>${esc(c)}</span><span>${rd(v)}</span></div>
+        <div class="pista"><div class="relleno" style="width:${Math.max(4, v / maxC * 100)}%"></div></div></div>`).join('')
+        : '<div class="vacio"><i class="fa-solid fa-receipt"></i>Sin gastos registrados este mes.</div>'}</div>
   </div>`;
+}
+
+function cFinanzas() {
+  const m = E.mes, d = datosInforme(m);
+  $('vista').innerHTML = `
+  <div class="rejilla2">
+    <div class="panel"><h2>Entradas por tipo</h2>
+      ${d.porTipo.length ? `<table class="informe-tabla"><thead><tr><th>Tipo</th><th>Cant.</th><th>Total</th></tr></thead><tbody>
+        ${d.porTipo.map(r => `<tr><td>${esc(r[0])}</td><td>${r[1]}</td><td>${rd(r[2])}</td></tr>`).join('')}
+        <tr class="total"><td>Total</td><td>${d.porTipo.reduce((a, r) => a + r[1], 0)}</td><td>${rd(d.b.entradas)}</td></tr></tbody></table>` : '<p class="ayuda">Sin entradas este mes.</p>'}</div>
+    <div class="panel"><h2>Balance</h2>
+      <table class="informe-tabla"><tbody>
+        <tr><td>Saldo al inicio del mes</td><td>${rd(d.b.saldoInicial)}</td></tr>
+        <tr><td>(+) Entradas</td><td style="color:var(--esmeralda)">${rd(d.b.entradas)}</td></tr>
+        <tr><td>(−) Salidas</td><td style="color:var(--naranja-osc)">${rd(d.b.salidas)}</td></tr>
+        <tr class="total"><td>Saldo al cierre</td><td>${rd(d.b.saldoFinal)}</td></tr></tbody></table></div>
+  </div>
+  <div class="panel"><h2>Detalle de gastos · ${nombreMes(m)}</h2>
+    ${d.sal.length ? `<div class="tabla-cont"><table><thead><tr><th>Fecha</th><th>Categoría</th><th>Descripción</th><th>Perrito</th><th class="monto">Monto</th></tr></thead><tbody>
+      ${d.sal.map(x => `<tr><td>${fechaCorta(x.Fecha)}</td><td><span class="chip c-nar">${esc(x.Categoria)}</span></td><td>${esc(x.Descripcion)}</td>
+        <td>${x.Perrito ? esc(x.Perrito) : '<span class="ayuda">General</span>'}</td><td class="monto" style="color:var(--naranja-osc)">${rd(x.Monto)}</td></tr>`).join('')}
+    </tbody></table></div>` : '<div class="vacio"><i class="fa-solid fa-receipt"></i>Sin gastos registrados este mes.</div>'}
+  </div>`;
+}
+
+function cPerritos() {
+  const todos = (E.datos.perritos || []).slice().sort((a, b) => (a.Estado !== 'Disponible') - (b.Estado !== 'Disponible') || a.Nombre.localeCompare(b.Nombre));
+  const disp = todos.filter(p => p.Estado === 'Disponible');
+  const completos = disp.filter(p => { const c = cobertura(p.ID); return c.alimento && c.veterinaria; }).length;
+  const invMes = suma(delMes(activas(E.datos.salidas), E.mes).filter(x => x.PerritoID));
+  const cubre = (p) => { const c = cobertura(p.ID); return `<div class="cob">
+      ${c.alimento ? '<span class="ok"><i class="fa-solid fa-bowl-food"></i> Alimento: cubierto</span>' : '<span class="libre"><i class="fa-solid fa-bowl-food"></i> Alimento: busca padrino</span>'}
+      ${c.veterinaria ? '<span class="ok"><i class="fa-solid fa-stethoscope"></i> Veterinaria: cubierta</span>' : '<span class="libre"><i class="fa-solid fa-stethoscope"></i> Veterinaria: busca padrino</span>'}</div>`; };
+  $('vista').innerHTML = `
+  <div class="kpis">
+    <div class="kpi"><small>Perritos en el programa</small><b>${todos.length}</b><span class="det">${disp.length} disponible${disp.length === 1 ? '' : 's'} · ${(n => n + (n === 1 ? ' adoptado' : ' adoptados'))(todos.filter(p => p.Estado === 'Adoptado').length)}</span></div>
+    <div class="kpi"><small>Con todo cubierto</small><b style="color:var(--esmeralda)">${completos}</b><span class="det">Alimento y veterinaria</span></div>
+    <div class="kpi"><small>Invertido en perritos (mes)</small><b style="color:var(--naranja-osc)">${rd(invMes)}</b><span class="det">Gastos ligados a un perrito en ${nombreMes(E.mes)}</span></div>
+  </div>
+  <div class="panel"><h2>Perritos</h2>
+    ${todos.length ? `<div class="perros">${todos.map(p => { const c = cuentasPerrito(p.ID); return `
+      <article class="perro">
+        <div class="fotos" onclick="cFicha('${esc(p.ID)}')"><img src="${fotoUrl(p.Foto1)}" alt="${esc(p.Nombre)}" loading="lazy" onerror="this.src=SIN_FOTO">
+          <div class="chips-sup"><span class="chip ${CHIP_PERRO[p.Estado] || 'c-gris'}">${esc(p.Estado)}</span></div></div>
+        <div class="cuerpo">
+          <h3 onclick="cFicha('${esc(p.ID)}')">${esc(p.Nombre)}</h3>
+          <div class="datos"><i class="fa-solid ${p.Sexo === 'Hembra' ? 'fa-venus' : 'fa-mars'}"></i> ${esc(p.Sexo)}${p.Edad ? ' · ' + esc(p.Edad) : ''} · ${esc(p.Tamano)}</div>
+          ${p.Estado === 'Disponible' ? cubre(p) : ''}
+          <p class="ayuda">Recibido: ${rd(c.totalAportes)} · Invertido: ${rd(c.totalGastos)}</p>
+          <div class="pie-p"><span></span><button class="btn btn-sec btn-mini" onclick="cFicha('${esc(p.ID)}')"><i class="fa-solid fa-eye"></i> Ver ficha</button></div>
+        </div></article>`; }).join('')}</div>`
+    : '<div class="vacio"><i class="fa-solid fa-dog"></i>Todavía no hay perritos registrados.</div>'}
+  </div>`;
+}
+
+function cFicha(id) {
+  const p = (E.datos.perritos || []).find(x => x.ID === id); if (!p) return;
+  const c = cuentasPerrito(p.ID), cob = cobertura(p.ID);
+  abrirModal(`<div class="ficha-fotos ${p.Foto2 ? '' : 'una'}">
+      <img src="${fotoUrl(p.Foto1, 900)}" alt="${esc(p.Nombre)}" onerror="this.src=SIN_FOTO">
+      ${p.Foto2 ? `<img src="${fotoUrl(p.Foto2, 900)}" alt="" onerror="this.remove()">` : ''}</div>
+    <h3 style="margin-bottom:4px">${esc(p.Nombre)}</h3>
+    <p class="ayuda" style="font-weight:700;margin-bottom:12px">${esc(p.Sexo)}${p.Edad ? ' · ' + esc(p.Edad) : ''} · ${esc(p.Tamano)} · <span class="chip ${CHIP_PERRO[p.Estado] || 'c-gris'}">${esc(p.Estado)}</span></p>
+    <div class="historia">${formatoHistoria(p.Historia)}</div>
+    ${p.Estado === 'Disponible' ? `<div style="background:var(--turq-claro);border-radius:12px;padding:10px 12px;margin-top:8px"><b style="color:#17766f">Apadrinamiento</b>
+      <div class="cob"><span class="${cob.alimento ? 'ok' : 'libre'}">Alimento: ${cob.alimento ? 'cubierto' : 'busca padrino'}</span><span class="${cob.veterinaria ? 'ok' : 'libre'}">Veterinaria: ${cob.veterinaria ? 'cubierta' : 'busca padrino'}</span></div></div>` : ''}
+    <div style="background:var(--verde-claro);border-radius:12px;padding:10px 12px;margin-top:8px"><b style="color:var(--esmeralda)">Cuentas de ${esc(p.Nombre)}</b> <span class="ayuda">(todo su historial)</span>
+      <div class="cuentas"><div><small>Aportes de padrinos</small><b style="color:var(--esmeralda)">${rd(c.totalAportes)}</b></div>
+        <div><small>Invertido</small><b style="color:var(--naranja-osc)">${rd(c.totalGastos)}</b></div>
+        <div><small>Diferencia</small><b>${rd(c.totalAportes - c.totalGastos)}</b></div></div></div>
+    ${p.Enlace ? `<p style="margin-top:8px"><a class="enlace" href="${esc(p.Enlace)}" target="_blank" rel="noopener"><i class="fa-solid fa-video"></i> Ver su video</a></p>` : ''}
+    <div class="pie"><button type="button" class="btn btn-sec" onclick="cerrarModal()">Cerrar</button>
+      <button type="button" class="btn btn-nar" onclick="bajarInformePerrito('${esc(p.ID)}', null)"><i class="fa-solid fa-file-pdf"></i> Informe del ahijado</button></div>`);
 }
 
 function pdfInforme() {
@@ -1549,7 +1711,7 @@ async function vUsuarios() {
   $('vista').innerHTML = `
   <div class="panel">
     <h2>Usuarios del panel <button class="btn btn-nar" onclick="modalUsuario()"><i class="fa-solid fa-user-plus"></i> Nuevo usuario</button></h2>
-    <p class="ayuda" style="margin-bottom:10px"><b>Administrador:</b> todo, incluido anular registros y gestionar usuarios. <b>Registrador:</b> registra colaboradores, entradas y salidas, y descarga informes.</p>
+    <p class="ayuda" style="margin-bottom:10px"><b>Administrador:</b> todo, incluido anular registros y gestionar usuarios. <b>Registrador:</b> registra colaboradores, entradas y salidas, y descarga informes. <b>Consulta:</b> solo ve resúmenes, gráficos e informes, sin datos personales y sin poder modificar nada.</p>
     <div class="tabla-cont"><table><thead><tr><th>Nombre</th><th>Usuario</th><th>Rol</th><th>Desde</th><th>Estado</th><th></th></tr></thead><tbody>
     ${E.usuarios.map(u => `<tr><td><b>${esc(u.nombre)}</b></td><td>${esc(u.usuario)}</td><td>${esc(u.rol)}</td><td>${fechaCorta(u.fecha)}</td>
       <td><span class="chip ${u.estado === 'Activo' ? 'c-verde' : 'c-gris'}">${esc(u.estado)}</span></td>
@@ -1569,7 +1731,7 @@ function modalUsuario() {
   <form id="fM"><div class="campo"><label>Nombre</label><input name="nombre" required></div>
   <div class="campo"><label>Usuario</label><input name="usuario" placeholder="ej.: maria" required></div>
   <div class="campo"><label>Contraseña inicial (mínimo 8)</label><input name="clave" type="text" required><p class="ayuda">Compártela en persona; luego ella puede cambiarla.</p></div>
-  <div class="campo"><label>Rol</label><select name="rol"><option>Registrador</option><option>Administrador</option></select></div>
+  <div class="campo"><label>Rol</label><select name="rol"><option>Registrador</option><option>Administrador</option><option value="Consulta">Consulta (solo lectura)</option></select></div>
   <div class="pie"><button type="button" class="btn btn-sec" onclick="cerrarModal()">Cancelar</button><button class="btn btn-prim">Crear</button></div></form>`);
   $('fM').onsubmit = async e => {
     e.preventDefault();
@@ -1648,10 +1810,26 @@ const DEMO = (() => {
     usuarios: [{ usuario: 'juana', nombre: 'Juana Paulino', rol: 'Administrador', estado: 'Activo', fecha: p + '-01' }] };
 })();
 
+// Imita en el modo demostración lo que el servidor envía a un usuario de consulta
+function limpiarConsultaDemo(D, ses) {
+  const t = (l, c) => l.map(x => Object.fromEntries(c.map(k => [k, x[k] === undefined ? '' : x[k]])));
+  return { ok: true, sesion: ses, hoy: D.hoy, correos: [], bitacora: [],
+    entradas: t(D.entradas.filter(x => x.Estado !== 'Anulada'), ['ID', 'Fecha', 'Tipo', 'ColaboradorID', 'MesAporte', 'Monto', 'Estado', 'PerritoID', 'FechaRegistro']),
+    salidas: t(D.salidas.filter(x => x.Estado !== 'Anulada'), ['ID', 'Fecha', 'Categoria', 'Descripcion', 'Monto', 'Estado', 'PerritoID', 'Perrito', 'FechaRegistro']),
+    colaboradores: t(D.colaboradores, ['ID', 'FechaRegistro', 'Monto', 'DiaDeposito', 'Estado']),
+    apadrinamientos: t(D.apadrinamientos, ['ID', 'FechaRegistro', 'PerritoID', 'Perrito', 'Modalidad', 'Monto', 'DiaDeposito', 'Estado']),
+    donaciones: t(D.donaciones, ['ID', 'FechaRegistro', 'Monto', 'Estado']),
+    perritos: t(D.perritos, ['ID', 'FechaRegistro', 'Nombre', 'Sexo', 'Edad', 'Tamano', 'Historia', 'Enlace', 'Foto1', 'Foto2', 'Estado', 'Visible']),
+    adopciones: t(D.adopciones, ['ID', 'FechaRegistro', 'PerritoID', 'Estado']) };
+}
+
 async function demoApi(action, d) {
   await new Promise(r => setTimeout(r, 250));
-  const D = DEMO, ses = { usuario: 'juana', nombre: 'Juana Paulino (demo)', rol: 'Administrador' };
-  const todo = (aviso) => ({ ok: true, sesion: ses, hoy: D.hoy, colaboradores: D.colaboradores, entradas: D.entradas, salidas: D.salidas, bitacora: D.bitacora, correos: D.correos, donaciones: D.donaciones, perritos: D.perritos, apadrinamientos: D.apadrinamientos, adopciones: D.adopciones, remitente: 'juana107@gmail.com', aviso });
+  const D = DEMO;
+  if (action === 'login') DEMO._consulta = /^consulta/i.test(d.usuario || '');
+  const ses = DEMO._consulta ? { usuario: 'consulta', nombre: 'Usuario de consulta (demo)', rol: 'Consulta' } : { usuario: 'juana', nombre: 'Juana Paulino (demo)', rol: 'Administrador' };
+  if (DEMO._consulta && ['logout', 'datos', 'fotoPerrito', 'cambiarMiClave', 'login', 'estado'].indexOf(action) < 0) return { ok: false, error: 'Tu usuario es de solo consulta: no puede registrar ni modificar información.' };
+  const todo = (aviso) => DEMO._consulta ? limpiarConsultaDemo(D, ses) : ({ ok: true, sesion: ses, hoy: D.hoy, colaboradores: D.colaboradores, entradas: D.entradas, salidas: D.salidas, bitacora: D.bitacora, correos: D.correos, donaciones: D.donaciones, perritos: D.perritos, apadrinamientos: D.apadrinamientos, adopciones: D.adopciones, remitente: 'juana107@gmail.com', aviso });
   const ahora = D.hoy + ' ' + new Date().toTimeString().slice(0, 5);
   const id = p => p + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();
   switch (action) {
