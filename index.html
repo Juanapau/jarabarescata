@@ -664,6 +664,8 @@ function fotoUrl(id, ancho = 600) {
 }
 
 // ---------- Cobertura de apadrinamientos ----------
+// Perrito que forma parte del programa de padrinos (disponible y marcado para Apadrinamiento)
+const enPadrinos = p => p.Estado === 'Disponible' && p.Visible === 'Sí';
 function cobertura(perritoID, excluirID) {
   const cub = { alimento: null, veterinaria: null };
   (E.datos.apadrinamientos || []).filter(a => a.PerritoID === perritoID && a.ID !== excluirID && (a.Estado === 'Activo' || a.Estado === 'Pausado'))
@@ -757,7 +759,7 @@ function vPadrinos() {
   const lista = todos.filter(a => fe === 'Todos' || (fe === 'Activos y pausados' ? a.Estado !== 'Finalizado' : a.Estado === fe))
     .sort((a, b) => a.Perrito.localeCompare(b.Perrito) || a.Nombre.localeCompare(b.Nombre));
   const act = todos.filter(a => a.Estado === 'Activo');
-  const disp = perros.filter(p => p.Estado === 'Disponible');
+  const disp = perros.filter(enPadrinos);
   const completos = disp.filter(p => { const c = cobertura(p.ID); return c.alimento && c.veterinaria; }).length;
   const alerta = todos.filter(a => a.Estado !== 'Finalizado' && (perros.find(p => p.ID === a.PerritoID) || {}).Estado !== 'Disponible');
   $('vista').innerHTML = `
@@ -788,7 +790,7 @@ function vPadrinos() {
 
 function modalApadrinamiento(id) {
   const a = (E.datos.apadrinamientos || []).find(x => x.ID === id); if (!a) return;
-  const destinos = (E.datos.perritos || []).filter(p => p.ID !== a.PerritoID && p.Estado === 'Disponible' && modalidadLibre(p.ID, a.Modalidad, a.ID));
+  const destinos = (E.datos.perritos || []).filter(p => p.ID !== a.PerritoID && enPadrinos(p) && modalidadLibre(p.ID, a.Modalidad, a.ID));
   abrirModal(`<h3>Apadrinamiento de ${esc(a.Perrito)}</h3>
   <p style="margin-bottom:12px"><b>${esc(a.Nombre)}</b> · ${esc(a.Correo)}<br><span class="ayuda">${esc(a.Modalidad)} · ${rd(a.Monto)} al mes · desde ${fechaCorta(a.FechaRegistro)}</span></p>
   <div class="error-form oculto" id="mErr"></div>
@@ -1035,7 +1037,8 @@ function modalFicha(id) {
     <h3 style="margin-bottom:4px">${esc(p.Nombre)}</h3>
     <p class="ayuda" style="font-weight:700;margin-bottom:12px"><i class="fa-solid ${p.Sexo === 'Hembra' ? 'fa-venus' : 'fa-mars'}"></i> ${esc(p.Sexo)}${p.Edad ? ' · ' + esc(p.Edad) : ''} · ${esc(p.Tamano)} · <span class="chip ${CHIP_PERRO[p.Estado] || 'c-gris'}">${esc(p.Estado)}</span>${p.Visible === 'Sí' ? '' : ' <span class="chip c-gris">Oculto</span>'}</p>
     <div class="historia">${formatoHistoria(p.Historia)}</div>
-    <div style="background:var(--turq-claro);border-radius:12px;padding:10px 12px;margin-top:8px"><b style="color:#17766f">Padrinos</b>${htmlCobertura(p)}</div>
+    ${p.Visible === 'Sí' ? `<div style="background:var(--turq-claro);border-radius:12px;padding:10px 12px;margin-top:8px"><b style="color:#17766f">Padrinos</b>${htmlCobertura(p)}</div>` : ''}
+    ${p.EnAdopcion === 'Sí' && p.Ubicacion ? `<p style="margin-top:8px;font-weight:700"><i class="fa-solid fa-location-dot" style="color:var(--naranja)"></i> ${esc(p.Ubicacion)}</p>` : ''}
     ${(() => { const c = cuentasPerrito(p.ID); return `<div style="background:var(--verde-claro);border-radius:12px;padding:10px 12px;margin-top:8px">
       <b style="color:var(--esmeralda)">Cuentas de ${esc(p.Nombre)}</b> <span class="ayuda">(todo su historial)</span>
       <div class="cuentas"><div><small>Aportes de padrinos</small><b style="color:var(--esmeralda)">${rd(c.totalAportes)}</b></div>
@@ -1059,9 +1062,12 @@ function vPerritos() {
     <div class="kpi"><small>En Adopciones</small><b style="color:var(--naranja-osc)">${todos.filter(p => p.EnAdopcion === 'Sí' && p.Estado === 'Disponible').length}</b><span class="det">Disponibles y marcados para adopción</span></div>
   </div>
   <div class="panel">
-    <h2>Catálogo de perritos <button class="btn btn-nar" onclick="modalPerrito()"><i class="fa-solid fa-plus"></i> Agregar perrito</button></h2>
+    <h2>Catálogo de perritos <span style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-nar" onclick="modalPerrito(null, 'adopcion')"><i class="fa-solid fa-house-chimney"></i> Perrito para adopción</button>
+      <button class="btn btn-prim" onclick="modalPerrito(null, 'padrinos')"><i class="fa-solid fa-shield-dog"></i> Perrito para padrinos</button></span></h2>
     <div class="filtros">
       <input placeholder="Buscar por nombre o historia…" value="${esc(vPerritos.q || '')}" oninput="vPerritos.q=this.value;vPerritosLista()">
+      <select onchange="vPerritos.cat=this.value;vPerritosLista()">${[['Todos', 'Todos los catálogos'], ['Padrinos', 'Apadrinamiento'], ['Adopcion', 'Adopciones']].map(([v, t]) => `<option value="${v}" ${v === (vPerritos.cat || 'Todos') ? 'selected' : ''}>${t}</option>`).join('')}</select>
       <select onchange="vPerritos.estado=this.value;vPerritosLista()">${['Todos', ...ESTADOS_PERRITO].map(f => `<option ${f === fe ? 'selected' : ''}>${f}</option>`).join('')}</select>
     </div>
     <div id="listaPerros"></div>
@@ -1071,8 +1077,9 @@ function vPerritos() {
 
 function vPerritosLista() {
   const todos = E.datos.perritos || [];
-  const fe = vPerritos.estado || 'Todos', q = (vPerritos.q || '').toLowerCase();
-  const lista = todos.filter(p => (fe === 'Todos' || p.Estado === fe) && (p.Nombre + ' ' + p.Historia).toLowerCase().includes(q))
+  const fe = vPerritos.estado || 'Todos', q = (vPerritos.q || '').toLowerCase(), cat = vPerritos.cat || 'Todos';
+  const lista = todos.filter(p => (fe === 'Todos' || p.Estado === fe) && (cat === 'Todos' || (cat === 'Padrinos' ? p.Visible === 'Sí' : p.EnAdopcion === 'Sí'))
+      && (p.Nombre + ' ' + p.Historia + ' ' + (p.Ubicacion || '')).toLowerCase().includes(q))
     .sort((a, b) => a.Nombre.localeCompare(b.Nombre));
   $('listaPerros').innerHTML = lista.length ? `<div class="perros">${lista.map(p => `
       <article class="perro">
@@ -1086,8 +1093,9 @@ function vPerritosLista() {
         <div class="cuerpo">
           <h3 onclick="modalFicha('${esc(p.ID)}')">${esc(p.Nombre)}</h3>
           <div class="datos"><i class="fa-solid ${p.Sexo === 'Hembra' ? 'fa-venus' : 'fa-mars'}"></i> ${esc(p.Sexo)}${p.Edad ? ' · ' + esc(p.Edad) : ''} · ${esc(p.Tamano)}</div>
-          <p class="hist">${esc(textoPlano(p.Historia))}</p>
-          ${p.Estado === 'Disponible' ? htmlCobertura(p) : ''}
+          ${p.Historia ? `<p class="hist">${esc(textoPlano(p.Historia))}</p>` : ''}
+          ${p.EnAdopcion === 'Sí' && p.Ubicacion ? `<div class="datos"><i class="fa-solid fa-location-dot" style="color:var(--naranja)"></i> ${esc(p.Ubicacion)}</div>` : ''}
+          ${enPadrinos(p) ? htmlCobertura(p) : ''}
           <div class="pie-p">
             <button class="btn btn-sec btn-mini" onclick="modalFicha('${esc(p.ID)}')"><i class="fa-solid fa-eye"></i> Ver ficha</button>
             <button class="btn btn-sec btn-mini" onclick="modalPerrito('${esc(p.ID)}')"><i class="fa-solid fa-pen"></i> Editar</button>
@@ -1097,18 +1105,21 @@ function vPerritosLista() {
     : `<div class="vacio"><i class="fa-solid fa-dog"></i>${todos.length ? 'No hay perritos con este filtro.' : 'Todavía no hay perritos. Toca <b>Agregar perrito</b> para empezar el catálogo.'}</div>`;
 }
 
-function modalPerrito(id) {
-  const p = id ? (E.datos.perritos || []).find(x => x.ID === id) : { Sexo: 'Macho', Tamano: 'Mediano', Estado: 'Disponible', Visible: 'Sí' };
+function modalPerrito(id, modo = 'padrinos') {
+  const p = id ? (E.datos.perritos || []).find(x => x.ID === id)
+    : modo === 'adopcion' ? { Sexo: 'Macho', Tamano: 'Pequeño', Estado: 'Disponible', Visible: 'No', EnAdopcion: 'Sí' }
+    : { Sexo: 'Macho', Tamano: 'Mediano', Estado: 'Disponible', Visible: 'Sí', EnAdopcion: 'No' };
   if (!p) return;
-  abrirModal(`<h3>${id ? 'Editar a ' + esc(p.Nombre) : 'Agregar perrito'}</h3>
+  abrirModal(`<h3>${id ? 'Editar a ' + esc(p.Nombre) : modo === 'adopcion' ? 'Perrito para adopción' : 'Perrito para padrinos'}</h3>
+  ${!id && modo === 'adopcion' ? '<p class="ayuda" style="margin:-6px 0 12px">Solo necesitas la foto y sus datos. La historia es opcional.</p>' : ''}
   <div class="error-form oculto" id="mErr"></div>
   <form id="fM"><div class="grid">
     <div class="campo col2"><label>Nombre</label><input name="Nombre" value="${esc(p.Nombre || '')}" maxlength="60" required></div>
     <div class="campo"><label>Sexo</label><select name="Sexo">${opts(['Macho', 'Hembra'], p.Sexo)}</select></div>
     <div class="campo"><label>Tamaño</label><select name="Tamano">${opts(['Pequeño', 'Mediano', 'Grande'], p.Tamano)}</select></div>
     <div class="campo col2"><label>Edad aproximada</label><input name="Edad" value="${esc(p.Edad || '')}" placeholder="Ej.: 2 años, cachorro de 4 meses" maxlength="40"></div>
-    <div class="campo col2"><label>Historia <span class="ayuda" id="cuentaHist" style="font-weight:600"></span></label>
-      <textarea name="Historia" id="mHist" rows="7" maxlength="2000" placeholder="¿Dónde lo encontraron, cómo está, qué necesita, cómo es su carácter?" required>${esc(p.Historia || '')}</textarea>
+    <div class="campo col2"><label>Historia <span id="histReq" class="ayuda" style="font-weight:700"></span> <span class="ayuda" id="cuentaHist" style="font-weight:600"></span></label>
+      <textarea name="Historia" id="mHist" rows="7" maxlength="2000" placeholder="¿Dónde lo encontraron, cómo está, qué necesita, cómo es su carácter?">${esc(p.Historia || '')}</textarea>
       <p class="ayuda" style="margin-top:6px">Formato: <b>**negrita**</b> · <i>*cursiva*</i> · <b># Título</b> · <b>## Subtítulo</b> · listas con <b>- </b> o <b>1. </b> · deja una línea en blanco entre párrafos.</p>
       <button type="button" class="btn btn-sec btn-mini" id="btnPrevHist" style="margin-top:6px"><i class="fa-solid fa-eye"></i> Ver cómo se verá</button>
       <div class="prev-hist historia oculto" id="prevHist"></div></div>
@@ -1129,6 +1140,8 @@ function modalPerrito(id) {
   <p class="ayuda" style="margin-bottom:8px"><i class="fa-solid fa-circle-info"></i> Solo los perritos <b>Disponibles</b> aparecen en el formulario: en <b>Apadrinamiento</b>, en <b>Adopciones</b> o en ambos, según lo que marques.</p>
   <div class="pie"><button type="button" class="btn btn-sec" onclick="cerrarModal()">Cancelar</button><button class="btn btn-prim"><i class="fa-solid fa-floppy-disk"></i> Guardar</button></div></form>`);
   const contar = () => $('cuentaHist').textContent = '(' + $('mHist').value.length + '/2000)';
+  const marcarReq = () => { $('histReq').textContent = $('fM').Visible.checked ? '· obligatoria para Apadrinamiento' : '· opcional'; };
+  $('fM').Visible.addEventListener('change', marcarReq); marcarReq();
   const actualizarPrev = () => { $('prevHist').innerHTML = formatoHistoria($('mHist').value) || '<p class="ayuda">Escribe la historia para ver la vista previa.</p>'; };
   $('mHist').oninput = () => { contar(); if (!$('prevHist').classList.contains('oculto')) actualizarPrev(); }; contar();
   $('btnPrevHist').onclick = () => {
@@ -1146,6 +1159,7 @@ function modalPerrito(id) {
     try {
       const f1 = $('mFoto1').files[0], f2 = $('mFoto2').files[0];
       if (!id && !f1) return errModal('Agrega la foto principal del perrito.');
+      if (d.Visible && String(d.Historia || '').trim().length < 10) return errModal('Para mostrarlo en Apadrinamiento, escribe su historia (al menos una oración).');
       if (f1) d.foto1 = await prepararArchivo(f1, 1200, 0.82);
       if (f2) d.foto2 = await prepararArchivo(f2, 1200, 0.82);
       if ((f1 && !d.foto1.tipo.startsWith('image/')) || (f2 && !d.foto2.tipo.startsWith('image/'))) return errModal('Las fotos deben ser imágenes (JPG o PNG).');
@@ -1545,7 +1559,7 @@ function cResumen() {
   const colAct = E.datos.colaboradores.filter(c => c.Estado === 'Activo');
   const epC = estadoPagos(m, 'Círculo').filter(x => x.c.Estado === 'Activo'), alDiaC = epC.filter(x => x.estado === 'Pagado').length;
   const padAct = (E.datos.apadrinamientos || []).filter(a => a.Estado === 'Activo');
-  const disp = (E.datos.perritos || []).filter(p => p.Estado === 'Disponible');
+  const disp = (E.datos.perritos || []).filter(enPadrinos);
   const completos = disp.filter(p => { const c = cobertura(p.ID); return c.alimento && c.veterinaria; }).length;
   const adop = E.datos.adopciones || [];
   const cats = {}; delMes(activas(E.datos.salidas), m).forEach(s => cats[s.Categoria] = (cats[s.Categoria] || 0) + Number(s.Monto));
@@ -1607,7 +1621,7 @@ function cFinanzas() {
 function cPerritos() {
   const todos = (E.datos.perritos || []).slice().sort((a, b) => (a.Estado !== 'Disponible') - (b.Estado !== 'Disponible') || a.Nombre.localeCompare(b.Nombre));
   const disp = todos.filter(p => p.Estado === 'Disponible');
-  const completos = disp.filter(p => { const c = cobertura(p.ID); return c.alimento && c.veterinaria; }).length;
+  const completos = todos.filter(enPadrinos).filter(p => { const c = cobertura(p.ID); return c.alimento && c.veterinaria; }).length;
   const invMes = suma(delMes(activas(E.datos.salidas), E.mes).filter(x => x.PerritoID));
   const cubre = (p) => { const c = cobertura(p.ID); return `<div class="cob">
       ${c.alimento ? '<span class="ok"><i class="fa-solid fa-bowl-food"></i> Alimento: cubierto</span>' : '<span class="libre"><i class="fa-solid fa-bowl-food"></i> Alimento: busca padrino</span>'}
@@ -1626,7 +1640,8 @@ function cPerritos() {
         <div class="cuerpo">
           <h3 onclick="cFicha('${esc(p.ID)}')">${esc(p.Nombre)}</h3>
           <div class="datos"><i class="fa-solid ${p.Sexo === 'Hembra' ? 'fa-venus' : 'fa-mars'}"></i> ${esc(p.Sexo)}${p.Edad ? ' · ' + esc(p.Edad) : ''} · ${esc(p.Tamano)}</div>
-          ${p.Estado === 'Disponible' ? cubre(p) : ''}
+          ${enPadrinos(p) ? cubre(p) : ''}
+          ${p.EnAdopcion === 'Sí' && p.Estado === 'Disponible' ? `<div class="datos"><i class="fa-solid fa-house-chimney" style="color:var(--naranja)"></i> En adopción${p.Ubicacion ? ' · ' + esc(p.Ubicacion) : ''}</div>` : ''}
           <p class="ayuda">Recibido: ${rd(c.totalAportes)} · Invertido: ${rd(c.totalGastos)}</p>
           <div class="pie-p"><span></span><button class="btn btn-sec btn-mini" onclick="cFicha('${esc(p.ID)}')"><i class="fa-solid fa-eye"></i> Ver ficha</button></div>
         </div></article>`; }).join('')}</div>`
@@ -1643,7 +1658,7 @@ function cFicha(id) {
     <h3 style="margin-bottom:4px">${esc(p.Nombre)}</h3>
     <p class="ayuda" style="font-weight:700;margin-bottom:12px">${esc(p.Sexo)}${p.Edad ? ' · ' + esc(p.Edad) : ''} · ${esc(p.Tamano)} · <span class="chip ${CHIP_PERRO[p.Estado] || 'c-gris'}">${esc(p.Estado)}</span></p>
     <div class="historia">${formatoHistoria(p.Historia)}</div>
-    ${p.Estado === 'Disponible' ? `<div style="background:var(--turq-claro);border-radius:12px;padding:10px 12px;margin-top:8px"><b style="color:#17766f">Apadrinamiento</b>
+    ${enPadrinos(p) ? `<div style="background:var(--turq-claro);border-radius:12px;padding:10px 12px;margin-top:8px"><b style="color:#17766f">Apadrinamiento</b>
       <div class="cob"><span class="${cob.alimento ? 'ok' : 'libre'}">Alimento: ${cob.alimento ? 'cubierto' : 'busca padrino'}</span><span class="${cob.veterinaria ? 'ok' : 'libre'}">Veterinaria: ${cob.veterinaria ? 'cubierta' : 'busca padrino'}</span></div></div>` : ''}
     <div style="background:var(--verde-claro);border-radius:12px;padding:10px 12px;margin-top:8px"><b style="color:var(--esmeralda)">Cuentas de ${esc(p.Nombre)}</b> <span class="ayuda">(todo su historial)</span>
       <div class="cuentas"><div><small>Aportes de padrinos</small><b style="color:var(--esmeralda)">${rd(c.totalAportes)}</b></div>
