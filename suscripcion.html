@@ -78,6 +78,18 @@
   .boton.verde:active{box-shadow:0 2px 0 var(--esmeralda-osc)}
   .opcion.apadrina .ico{background:var(--turquesa)}
   .opcion.apadrina b{color:#17766f}
+  .opcion.adopta .ico{background:var(--esmeralda-osc)}
+  .opcion.adopta b{color:var(--esmeralda-osc)}
+  /* ---------- Adopta un perrito ---------- */
+  .ubic{font-size:.9rem;font-weight:700;color:var(--tinta);margin:-2px 0 12px;display:flex;gap:6px;align-items:flex-start}
+  .ubic i{color:var(--naranja);margin-top:3px}
+  .contactos{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .btn-contacto{display:flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;padding:12px 10px;color:#fff;font-weight:800;text-decoration:none;font-size:.95rem;border:0;cursor:pointer;font-family:inherit}
+  .btn-wa{background:#1fa855;box-shadow:0 4px 0 #15803f}
+  .btn-ig{background:linear-gradient(45deg,#f09433,#dc2743 50%,#bc1888);box-shadow:0 4px 0 #8e1566}
+  .btn-contacto:active{transform:translateY(3px);box-shadow:none}
+  .ver-hist{display:block;text-align:center;margin-top:12px;color:var(--esmeralda);font-weight:800;background:none;border:0;cursor:pointer;font:inherit;font-weight:800;width:100%}
+  .nota-ig{font-size:.76rem;color:var(--suave);text-align:center;margin-top:6px}
   /* ---------- Catálogo para apadrinar ---------- */
   .cargando{text-align:center;color:var(--suave);padding:30px 0;font-weight:700}
   .cat{display:grid;gap:14px}
@@ -211,7 +223,17 @@
           <span><b>Apadrina un perrito</b><small>Mira la historia de nuestros perritos y apadrina a uno de ellos.</small></span>
           <i class="fa-solid fa-chevron-right flecha"></i>
         </button>
+        <button type="button" class="opcion adopta" onclick="mostrarVista('adoptar')">
+          <span class="ico"><i class="fa-solid fa-house-chimney"></i></span>
+          <span><b>Adopta un perrito</b><small>Conoce a los perritos que buscan un hogar para siempre.</small></span>
+          <i class="fa-solid fa-chevron-right flecha"></i>
+        </button>
       </div>
+    </section>
+
+    <section id="vAdoptar" style="display:none">
+      <button type="button" class="volver" onclick="mostrarVista('eleccion')"><i class="fa-solid fa-arrow-left"></i> Volver</button>
+      <div id="listaAdop"><p class="cargando"><i class="fa-solid fa-paw fa-bounce"></i><br>Cargando perritos…</p></div>
     </section>
 
     <section id="vApadrinar" style="display:none">
@@ -486,7 +508,8 @@ const TEXTOS = {
   eleccion: ['Ayuda a los <span>perritos de la calle</span>', 'Cada aporte nos ayuda a alimentar, vacunar, esterilizar y atender a los perritos de la calle. Cada caso lo verás en nuestras redes.'],
   mensual:  ['Únete al <span>Círculo de Patitas</span>', 'Con un aporte mensual nos ayudas a alimentar, vacunar, esterilizar y atender a los perritos de la calle. Cada caso lo verás en nuestras redes.'],
   unica:    ['Haz una <span>donación única</span>', 'Un solo aporte, cuando quieras. Tu donación se usa para alimentar, vacunar, esterilizar y atender a los perritos de la calle.'],
-  apadrinar:['Apadrina un <span>perrito</span>', 'Elige a un perrito y cúbrele el alimento, la atención veterinaria o ambos, cada mes. Te contaremos cómo va en nuestras redes.']
+  apadrinar:['Apadrina un <span>perrito</span>', 'Elige a un perrito y cúbrele el alimento, la atención veterinaria o ambos, cada mes. Te contaremos cómo va en nuestras redes.'],
+  adoptar:  ['Adopta un <span>perrito</span>', 'Estos perritos buscan un hogar para siempre. Escríbenos por WhatsApp o Instagram para conocerles.']
 };
 function mostrarVista(v) {
   $('alerta').classList.remove('ver');
@@ -494,11 +517,13 @@ function mostrarVista(v) {
   $('formulario').style.display = v === 'mensual' ? 'block' : 'none';
   $('formUnica').style.display = v === 'unica' ? 'block' : 'none';
   $('vApadrinar').style.display = v === 'apadrinar' ? 'block' : 'none';
+  $('vAdoptar').style.display = v === 'adoptar' ? 'block' : 'none';
   $('formApad').style.display = 'none'; $('formAdop').style.display = 'none'; $('exitoAdop').style.display = 'none';
-  document.body.classList.toggle('ancho', v === 'apadrinar');
+  document.body.classList.toggle('ancho', v === 'apadrinar' || v === 'adoptar');
   if (v === 'apadrinar') cargarCatalogo();
+  if (v === 'adoptar') cargarAdopciones();
   $('titulo').innerHTML = TEXTOS[v][0]; $('intro').textContent = TEXTOS[v][1];
-  try { const u = new URL(location.href); if (v === 'eleccion') u.searchParams.delete('tipo'); else u.searchParams.set('tipo', v); if (v !== 'apadrinar') u.searchParams.delete('perrito'); history.replaceState(null, '', u); } catch (e) {}
+  try { const u = new URL(location.href); if (v === 'eleccion') u.searchParams.delete('tipo'); else u.searchParams.set('tipo', v); if (v !== 'apadrinar' && v !== 'adoptar') u.searchParams.delete('perrito'); history.replaceState(null, '', u); } catch (e) {}
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -628,10 +653,101 @@ function abrirFicha(id) {
     </div>`;
   $('capa').style.display = 'flex'; document.body.style.overflow = 'hidden'; $('hoja').scrollTop = 0;
   const cont = $('hoja').querySelector('.contenido'); if (cont) cont.scrollTop = 0;
+  activarGaleria();
+  try { const u = new URL(location.href); u.searchParams.set('perrito', p.ID); history.replaceState(null, '', u); } catch (e) {}
+}
+function activarGaleria() {
   const g = $('galeria');
   if (g && $('puntos')) [...$('puntos').children].forEach((sp, i) => sp.onclick = () => g.scrollTo({ left: i * g.clientWidth, behavior: 'smooth' }));
   if (g && $('puntos')) g.addEventListener('scroll', () => { const i = Math.round(g.scrollLeft / g.clientWidth); [...$('puntos').children].forEach((s, j) => s.classList.toggle('act', i === j)); }, { passive: true });
+}
+
+// ---------- Adopta un perrito ----------
+const ADO = { perritos: null, whatsapp: '', instagram: 'jarabarescata' };
+const waAdop = p => 'https://wa.me/' + ADO.whatsapp + '?text=' + encodeURIComponent('Hola, vi a ' + p.Nombre + ' en JarabaRescata y me interesa adoptar' + (p.Sexo === 'Hembra' ? 'la' : 'lo') + ' 🏡🐶');
+const igAdop = () => 'https://ig.me/m/' + encodeURIComponent(ADO.instagram);
+function botonesContacto(p) {
+  return `<div class="contactos">
+      ${ADO.whatsapp ? `<a class="btn-contacto btn-wa" href="${waAdop(p)}" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>` : ''}
+      <a class="btn-contacto btn-ig" href="${igAdop()}" target="_blank" rel="noopener" ${ADO.whatsapp ? '' : 'style="grid-column:1/-1"'}><i class="fa-brands fa-instagram"></i> Instagram</a>
+    </div>
+    <p class="nota-ig"><i class="fa-brands fa-instagram"></i> Por Instagram, cuéntanos que te interesa adoptar a ${esc(p.Nombre)}.</p>`;
+}
+
+async function cargarAdopciones(forzar) {
+  if (ADO.perritos && !forzar) return pintarAdopciones();
+  $('listaAdop').innerHTML = '<p class="cargando"><i class="fa-solid fa-paw fa-bounce"></i><br>Cargando perritos…</p>';
+  try {
+    let r;
+    if (API_URL) {
+      const resp = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'adopcionesPublicas' }) });
+      r = await resp.json();
+    } else { await new Promise(ok => setTimeout(ok, 500)); r = adopcionesDemo(); }
+    if (!r.ok) throw new Error(r.error || 'No se pudieron cargar los perritos.');
+    ADO.perritos = r.perritos || []; ADO.whatsapp = String(r.whatsapp || '').replace(/\D/g, ''); if (r.instagram) ADO.instagram = r.instagram;
+    pintarAdopciones();
+    let pid = ''; try { pid = new URLSearchParams(location.search).get('perrito'); } catch (e) {}
+    if (pid && ADO.perritos.some(p => p.ID === pid)) fichaAdopcion(pid);
+  } catch (err) {
+    $('listaAdop').innerHTML = `<p class="cargando">${esc(err.message === 'Failed to fetch' ? 'No hay conexión.' : err.message)}<br><br>
+      <button type="button" class="volver" onclick="cargarAdopciones(true)"><i class="fa-solid fa-rotate"></i> Intentar de nuevo</button></p>`;
+  }
+}
+
+function pintarAdopciones() {
+  const lista = ADO.perritos;
+  if (!lista.length) {
+    $('listaAdop').innerHTML = '<p class="cargando"><i class="fa-solid fa-house-chimney" style="font-size:2rem;color:var(--esmeralda)"></i><br>Por ahora no tenemos perritos en adopción. ¡Síguenos en Instagram para enterarte!</p>';
+    return;
+  }
+  $('listaAdop').innerHTML = '<div class="cat">' + lista.map(p => `
+    <article class="tarj">
+      <div class="foto" onclick="fichaAdopcion('${esc(p.ID)}')"><img src="${fotoUrl(p.Foto1)}" alt="${esc(p.Nombre)}" loading="lazy" onerror="this.src=SIN_FOTO"></div>
+      <div class="cuerpo">
+        <h3>${esc(p.Nombre)}</h3>
+        <div class="datos"><i class="fa-solid ${p.Sexo === 'Hembra' ? 'fa-venus' : 'fa-mars'}"></i> ${esc(p.Sexo)}${p.Edad ? ' · ' + esc(p.Edad) : ''} · ${esc(p.Tamano)}</div>
+        ${p.Ubicacion ? `<div class="ubic"><i class="fa-solid fa-location-dot"></i> ${esc(p.Ubicacion)}</div>` : ''}
+        ${botonesContacto(p)}
+        <button type="button" class="ver-hist" onclick="fichaAdopcion('${esc(p.ID)}')"><i class="fa-solid fa-book-open"></i> Conocer su historia</button>
+      </div>
+    </article>`).join('') + '</div>';
+}
+
+function fichaAdopcion(id) {
+  const p = (ADO.perritos || []).find(x => x.ID === id); if (!p) return;
+  const fotos = [p.Foto1, p.Foto2].filter(Boolean);
+  $('hoja').innerHTML = `
+    <button type="button" class="cerrar-hoja" onclick="cerrarFicha()" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
+    <div class="lado-fotos">
+      <div class="galeria" id="galeria">${fotos.map(f => `<img src="${fotoUrl(f, 900)}" alt="${esc(p.Nombre)}" onerror="this.src=SIN_FOTO">`).join('')}</div>
+      ${fotos.length > 1 ? `<div class="puntos" id="puntos">${fotos.map((f, i) => `<span class="${i ? '' : 'act'}"></span>`).join('')}</div>` : ''}
+    </div>
+    <div class="contenido">
+      <h2>${esc(p.Nombre)}</h2>
+      <div class="ayuda" style="font-weight:700"><i class="fa-solid ${p.Sexo === 'Hembra' ? 'fa-venus' : 'fa-mars'}"></i> ${esc(p.Sexo)}${p.Edad ? ' · ' + esc(p.Edad) : ''} · ${esc(p.Tamano)}</div>
+      ${p.Ubicacion ? `<div class="ubic" style="margin-top:8px"><i class="fa-solid fa-location-dot"></i> ${esc(p.Ubicacion)}</div>` : ''}
+      <div class="historia">${formatoHistoria(p.Historia)}</div>
+      ${p.Enlace ? `<p style="margin-bottom:12px"><a href="${esc(p.Enlace)}" target="_blank" rel="noopener" style="color:var(--turquesa);font-weight:800;text-decoration:none"><i class="fa-solid fa-video"></i> Ver su video</a></p>` : ''}
+      <div class="adoptar" style="margin-top:6px">
+        <h3><i class="fa-solid fa-house-chimney"></i> ¿Quieres adoptar a ${esc(p.Nombre)}?</h3>
+        <p>Escríbenos y te contamos cómo es ${p.Sexo === 'Hembra' ? 'ella' : 'él'} y los pasos para la adopción.</p>
+        ${botonesContacto(p)}
+      </div>
+    </div>`;
+  $('capa').style.display = 'flex'; document.body.style.overflow = 'hidden'; $('hoja').scrollTop = 0;
+  const cont = $('hoja').querySelector('.contenido'); if (cont) cont.scrollTop = 0;
+  activarGaleria();
   try { const u = new URL(location.href); u.searchParams.set('perrito', p.ID); history.replaceState(null, '', u); } catch (e) {}
+}
+
+function adopcionesDemo() {
+  const f = (c1, e) => 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="400" height="300" fill="${c1}"/><text x="200" y="185" font-size="110" text-anchor="middle">${e}</text></svg>`);
+  return { ok: true, whatsapp: '18090000000', instagram: 'jarabarescata', perritos: [
+    { ID: 'P-1', Nombre: 'Canela', Sexo: 'Hembra', Edad: '2 años', Tamano: 'Mediano', Ubicacion: 'Hogar temporal en Pinar Quemado', Enlace: '', Foto1: f('#F39A35', '🐕'), Foto2: f('#25A9A0', '🐾'),
+      Historia: '# 🐾 Hola, soy Canela\n\nMe encontraron cerca del parque. Soy **súper cariñosa** y me llevo bien con otros perritos.' },
+    { ID: 'P-4', Nombre: 'Rocky', Sexo: 'Macho', Edad: '1 año', Tamano: 'Grande', Ubicacion: 'Jarabacoa centro', Enlace: '', Foto1: f('#9fd8d2', '🦮'), Foto2: '',
+      Historia: 'Juguetón y noble. Ya está vacunado y esterilizado.' }
+  ] };
 }
 function cerrarFicha() {
   $('capa').style.display = 'none'; document.body.style.overflow = '';
@@ -872,7 +988,7 @@ $('formulario').addEventListener('submit', async e => {
 });
 
 function mostrarExito(d, dep, tipo = 'mensual'){
-  ['eleccion', 'formulario', 'formUnica', 'vApadrinar', 'formApad', 'formAdop'].forEach(id => $(id).style.display = 'none');
+  ['eleccion', 'formulario', 'formUnica', 'vApadrinar', 'vAdoptar', 'formApad', 'formAdop'].forEach(id => $(id).style.display = 'none');
   document.body.classList.remove('ancho');
   const primer = (d.nombre || '').split(' ')[0];
   $('exTitulo').textContent = primer ? '¡Gracias, ' + primer + '!' : '¡Gracias por tu donación!';
@@ -929,7 +1045,7 @@ function mostrarExito(d, dep, tipo = 'mensual'){
 
 // Enlaces directos: ?tipo=mensual, ?tipo=unica, ?tipo=apadrinar y ?tipo=apadrinar&perrito=ID
 // (va al final para que todo lo anterior ya esté cargado)
-(() => { let t = ''; try { t = new URLSearchParams(location.search).get('tipo'); } catch (e) {} if (t === 'mensual' || t === 'unica' || t === 'apadrinar') mostrarVista(t); })();
+(() => { let t = ''; try { t = new URLSearchParams(location.search).get('tipo'); } catch (e) {} if (['mensual', 'unica', 'apadrinar', 'adoptar'].indexOf(t) >= 0) mostrarVista(t); })();
 </script>
 </body>
 </html>
