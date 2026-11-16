@@ -1055,7 +1055,8 @@ function vPerritos() {
   $('vista').innerHTML = `
   <div class="kpis">
     <div class="kpi"><small>Perritos registrados</small><b>${todos.length}</b><span class="det">${n('Disponible')} disponibles · ${n('Adoptado')} adoptados</span></div>
-    <div class="kpi"><small>En el catálogo público</small><b style="color:var(--esmeralda)">${visibles}</b><span class="det">Disponibles y marcados para mostrar</span></div>
+    <div class="kpi"><small>En Apadrinamiento</small><b style="color:var(--esmeralda)">${visibles}</b><span class="det">Disponibles y marcados para mostrar</span></div>
+    <div class="kpi"><small>En Adopciones</small><b style="color:var(--naranja-osc)">${todos.filter(p => p.EnAdopcion === 'Sí' && p.Estado === 'Disponible').length}</b><span class="det">Disponibles y marcados para adopción</span></div>
   </div>
   <div class="panel">
     <h2>Catálogo de perritos <button class="btn btn-nar" onclick="modalPerrito()"><i class="fa-solid fa-plus"></i> Agregar perrito</button></h2>
@@ -1079,7 +1080,8 @@ function vPerritosLista() {
           <img src="${fotoUrl(p.Foto1)}" alt="${esc(p.Nombre)}" loading="lazy" onerror="this.src=SIN_FOTO" onclick="modalFicha('${esc(p.ID)}')">
           ${p.Foto2 ? `<img class="mini" src="${fotoUrl(p.Foto2, 200)}" alt="" loading="lazy" onerror="this.remove()" onclick="modalFicha('${esc(p.ID)}')">` : ''}
           <div class="chips-sup"><span class="chip ${CHIP_PERRO[p.Estado] || 'c-gris'}">${esc(p.Estado)}</span>
-            ${p.Visible === 'Sí' ? '' : '<span class="chip c-gris"><i class="fa-solid fa-eye-slash"></i> Oculto</span>'}</div>
+            ${p.EnAdopcion === 'Sí' && p.Estado === 'Disponible' ? '<span class="chip c-nar"><i class="fa-solid fa-house-chimney"></i> En adopción</span>' : ''}
+            ${p.Visible === 'Sí' || p.EnAdopcion === 'Sí' ? '' : '<span class="chip c-gris"><i class="fa-solid fa-eye-slash"></i> Oculto</span>'}</div>
         </div>
         <div class="cuerpo">
           <h3 onclick="modalFicha('${esc(p.ID)}')">${esc(p.Nombre)}</h3>
@@ -1118,11 +1120,13 @@ function modalPerrito(id) {
         <input type="file" id="mFoto2" accept="image/*">
         ${p.Foto2 ? '<label class="ayuda" style="display:flex;gap:6px;align-items:center;margin-top:6px;font-weight:700;cursor:pointer"><input type="checkbox" name="quitarFoto2" style="width:auto"> Quitar la segunda foto</label>' : ''}</div></div></div>
     <div class="campo col2"><label>Enlace al video en Instagram o TikTok (opcional)</label><input name="Enlace" type="url" value="${esc(p.Enlace || '')}" placeholder="https://www.instagram.com/reel/…"></div>
-    <div class="campo"><label>Estado</label><select name="Estado">${opts(ESTADOS_PERRITO, p.Estado)}</select></div>
-    <div class="campo" style="display:flex;align-items:flex-end"><label class="check-linea" style="width:100%"><input type="checkbox" name="Visible" ${p.Visible === 'Sí' ? 'checked' : ''}> Mostrar en el catálogo</label></div>
+    <div class="campo col2"><label>Estado</label><select name="Estado">${opts(ESTADOS_PERRITO, p.Estado)}</select></div>
+    <div class="campo"><label class="check-linea" style="width:100%"><input type="checkbox" name="Visible" ${p.Visible === 'Sí' ? 'checked' : ''}> <span><i class="fa-solid fa-shield-dog"></i> Mostrar en Apadrinamiento</span></label></div>
+    <div class="campo"><label class="check-linea" style="width:100%;background:var(--nar-claro)"><input type="checkbox" name="EnAdopcion" id="mEnAdop" ${p.EnAdopcion === 'Sí' ? 'checked' : ''}> <span><i class="fa-solid fa-house-chimney"></i> Mostrar en Adopciones</span></label></div>
+    <div class="campo col2" id="bUbic"><label>Ubicación (se muestra en Adopciones)</label><input name="Ubicacion" value="${esc(p.Ubicacion || '')}" maxlength="120" placeholder="Ej.: Hogar temporal en Pinar Quemado, Jarabacoa"></div>
     <div class="campo col2"><label>Notas internas (no se publican)</label><textarea name="Notas" rows="2">${esc(p.Notas || '')}</textarea></div>
   </div>
-  <p class="ayuda" style="margin-bottom:8px"><i class="fa-solid fa-circle-info"></i> Solo los perritos <b>Disponibles</b> y marcados para mostrar aparecerán en el catálogo para apadrinar.</p>
+  <p class="ayuda" style="margin-bottom:8px"><i class="fa-solid fa-circle-info"></i> Solo los perritos <b>Disponibles</b> aparecen en el formulario: en <b>Apadrinamiento</b>, en <b>Adopciones</b> o en ambos, según lo que marques.</p>
   <div class="pie"><button type="button" class="btn btn-sec" onclick="cerrarModal()">Cancelar</button><button class="btn btn-prim"><i class="fa-solid fa-floppy-disk"></i> Guardar</button></div></form>`);
   const contar = () => $('cuentaHist').textContent = '(' + $('mHist').value.length + '/2000)';
   const actualizarPrev = () => { $('prevHist').innerHTML = formatoHistoria($('mHist').value) || '<p class="ayuda">Escribe la historia para ver la vista previa.</p>'; };
@@ -1137,6 +1141,7 @@ function modalPerrito(id) {
     e.preventDefault();
     const d = Object.fromEntries(new FormData(e.target)); if (id) d.ID = id;
     d.Visible = e.target.Visible.checked;
+    d.EnAdopcion = e.target.EnAdopcion.checked;
     if (d.quitarFoto2) d.quitarFoto2 = true;
     try {
       const f1 = $('mFoto1').files[0], f2 = $('mFoto2').files[0];
@@ -1788,7 +1793,7 @@ const DEMO = (() => {
     Dn('D-3', p + '-19', 'Anónimo', 'Sí', 'otro@ejemplo.com', 1500, 'Banco BHD', 'Recibida', 'E-5', p + '-20')
   ];
   const fotoDemo = (c1, c2, e) => 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient></defs><rect width="400" height="300" fill="url(#g)"/><text x="200" y="185" font-size="110" text-anchor="middle">${e}</text></svg>`);
-  const Pe = (id, n, sx, ed, t, hi, f1, f2, es = 'Disponible', vi = 'Sí') => ({ ID: id, FechaRegistro: p + '-10', Nombre: n, Sexo: sx, Edad: ed, Tamano: t, Historia: hi, Enlace: '', Foto1: f1, Foto2: f2, Estado: es, Visible: vi, Notas: '' });
+  const Pe = (id, n, sx, ed, t, hi, f1, f2, es = 'Disponible', vi = 'Sí') => ({ ID: id, FechaRegistro: p + '-10', Nombre: n, Sexo: sx, Edad: ed, Tamano: t, Historia: hi, Enlace: '', Foto1: f1, Foto2: f2, Estado: es, Visible: vi, Notas: '', EnAdopcion: 'Sí', Ubicacion: 'Hogar temporal en Pinar Quemado' });
   const perritos = [
     Pe('P-1', 'Canela', 'Hembra', '2 años', 'Mediano', '# 🐾 Hola, soy Canela\n\nMe encontraron cerca del parque, **muy delgada y con sarna**. Hoy estoy en tratamiento y soy *súper cariñosa* con todos.\n\n## Lo que necesito\n- Alimento de calidad\n- Mis baños medicados\n- Mucho amor', fotoDemo('#F39A35', '#FFF7E8', '🐕'), fotoDemo('#25A9A0', '#FFF7E8', '🐾')),
     Pe('P-2', 'Bruno', 'Macho', 'Cachorro de 5 meses', 'Pequeño', 'Rescatado de un solar con sus hermanos. Juguetón y curioso, necesita sus vacunas completas.', fotoDemo('#16845B', '#e5f4ec', '🐶'), ''),
@@ -1890,7 +1895,7 @@ async function demoApi(action, d) {
     }
     case 'guardarPerrito': {
       const toUrl = f => f ? 'data:' + f.tipo + ';base64,' + f.base64 : '';
-      const datos = { ...d, Visible: d.Visible ? 'Sí' : 'No' }; delete datos.foto1; delete datos.foto2; delete datos.quitarFoto2;
+      const datos = { ...d, Visible: d.Visible ? 'Sí' : 'No', EnAdopcion: d.EnAdopcion ? 'Sí' : 'No' }; delete datos.foto1; delete datos.foto2; delete datos.quitarFoto2;
       if (d.ID) {
         const pe = D.perritos.find(x => x.ID === d.ID);
         Object.assign(pe, datos, { Foto1: d.foto1 ? toUrl(d.foto1) : pe.Foto1, Foto2: d.foto2 ? toUrl(d.foto2) : d.quitarFoto2 ? '' : pe.Foto2 });
