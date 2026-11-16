@@ -665,13 +665,14 @@ function activarGaleria() {
 // ---------- Adopta un perrito ----------
 const ADO = { perritos: null, whatsapp: '', instagram: 'jarabarescata' };
 const waAdop = p => 'https://wa.me/' + ADO.whatsapp + '?text=' + encodeURIComponent('Hola, vi a ' + p.Nombre + ' en JarabaRescata y me interesa adoptar' + (p.Sexo === 'Hembra' ? 'la' : 'lo') + ' 🏡🐶');
-const igAdop = () => 'https://ig.me/m/' + encodeURIComponent(ADO.instagram);
+// El enlace directo al chat (ig.me) no funciona en todos los dispositivos: se abre el perfil y desde ahí "Enviar mensaje"
+const igAdop = () => 'https://www.instagram.com/' + encodeURIComponent(ADO.instagram) + '/';
 function botonesContacto(p) {
   return `<div class="contactos">
       ${ADO.whatsapp ? `<a class="btn-contacto btn-wa" href="${waAdop(p)}" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>` : ''}
       <a class="btn-contacto btn-ig" href="${igAdop()}" target="_blank" rel="noopener" ${ADO.whatsapp ? '' : 'style="grid-column:1/-1"'}><i class="fa-brands fa-instagram"></i> Instagram</a>
     </div>
-    <p class="nota-ig"><i class="fa-brands fa-instagram"></i> Por Instagram, cuéntanos que te interesa adoptar a ${esc(p.Nombre)}.</p>`;
+    <p class="nota-ig"><i class="fa-brands fa-instagram"></i> Se abrirá nuestro perfil: toca <b>Enviar mensaje</b> y cuéntanos que te interesa adoptar a ${esc(p.Nombre)}.</p>`;
 }
 
 async function cargarAdopciones(forzar) {
