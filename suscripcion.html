@@ -708,7 +708,7 @@ function pintarAdopciones() {
         <div class="datos"><i class="fa-solid ${p.Sexo === 'Hembra' ? 'fa-venus' : 'fa-mars'}"></i> ${esc(p.Sexo)}${p.Edad ? ' · ' + esc(p.Edad) : ''} · ${esc(p.Tamano)}</div>
         ${p.Ubicacion ? `<div class="ubic"><i class="fa-solid fa-location-dot"></i> ${esc(p.Ubicacion)}</div>` : ''}
         ${botonesContacto(p)}
-        <button type="button" class="ver-hist" onclick="fichaAdopcion('${esc(p.ID)}')"><i class="fa-solid fa-book-open"></i> Conocer su historia</button>
+        ${p.Historia || p.Foto2 ? `<button type="button" class="ver-hist" onclick="fichaAdopcion('${esc(p.ID)}')"><i class="fa-solid ${p.Historia ? 'fa-book-open' : 'fa-images'}"></i> ${p.Historia ? 'Conocer su historia' : 'Ver más fotos'}</button>` : ''}
       </div>
     </article>`).join('') + '</div>';
 }
@@ -726,7 +726,7 @@ function fichaAdopcion(id) {
       <h2>${esc(p.Nombre)}</h2>
       <div class="ayuda" style="font-weight:700"><i class="fa-solid ${p.Sexo === 'Hembra' ? 'fa-venus' : 'fa-mars'}"></i> ${esc(p.Sexo)}${p.Edad ? ' · ' + esc(p.Edad) : ''} · ${esc(p.Tamano)}</div>
       ${p.Ubicacion ? `<div class="ubic" style="margin-top:8px"><i class="fa-solid fa-location-dot"></i> ${esc(p.Ubicacion)}</div>` : ''}
-      <div class="historia">${formatoHistoria(p.Historia)}</div>
+      ${p.Historia ? `<div class="historia">${formatoHistoria(p.Historia)}</div>` : '<div style="height:12px"></div>'}
       ${p.Enlace ? `<p style="margin-bottom:12px"><a href="${esc(p.Enlace)}" target="_blank" rel="noopener" style="color:var(--turquesa);font-weight:800;text-decoration:none"><i class="fa-solid fa-video"></i> Ver su video</a></p>` : ''}
       <div class="adoptar" style="margin-top:6px">
         <h3><i class="fa-solid fa-house-chimney"></i> ¿Quieres adoptar a ${esc(p.Nombre)}?</h3>
@@ -746,7 +746,7 @@ function adopcionesDemo() {
     { ID: 'P-1', Nombre: 'Canela', Sexo: 'Hembra', Edad: '2 años', Tamano: 'Mediano', Ubicacion: 'Hogar temporal en Pinar Quemado', Enlace: '', Foto1: f('#F39A35', '🐕'), Foto2: f('#25A9A0', '🐾'),
       Historia: '# 🐾 Hola, soy Canela\n\nMe encontraron cerca del parque. Soy **súper cariñosa** y me llevo bien con otros perritos.' },
     { ID: 'P-4', Nombre: 'Rocky', Sexo: 'Macho', Edad: '1 año', Tamano: 'Grande', Ubicacion: 'Jarabacoa centro', Enlace: '', Foto1: f('#9fd8d2', '🦮'), Foto2: '',
-      Historia: 'Juguetón y noble. Ya está vacunado y esterilizado.' }
+      Historia: '' }
   ] };
 }
 function cerrarFicha() {
