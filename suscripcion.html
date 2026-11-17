@@ -89,6 +89,13 @@
   .btn-ig{background:linear-gradient(45deg,#f09433,#dc2743 50%,#bc1888);box-shadow:0 4px 0 #8e1566}
   .btn-contacto:active{transform:translateY(3px);box-shadow:none}
   .ver-hist{display:block;text-align:center;margin-top:12px;color:var(--esmeralda);font-weight:800;background:none;border:0;cursor:pointer;font:inherit;font-weight:800;width:100%}
+  .hist-tarj{font-size:.93rem;line-height:1.5;margin:0 0 14px}
+  .hist-tarj p{margin:0 0 8px}.hist-tarj p:last-child{margin-bottom:0}
+  .hist-tarj h4,.hist-tarj h5,.hist-tarj h6{font-family:'Baloo 2',sans-serif;color:var(--esmeralda);font-size:1.05rem;margin:0 0 4px}
+  .hist-tarj strong{color:var(--esmeralda-osc)}
+  .hist-tarj ul,.hist-tarj ol{margin:0 0 8px 20px}
+  /* Si la historia es larga, se muestra el inicio y "Leer más" abre la ficha */
+  .hist-tarj.larga{display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden}
   .nota-ig{font-size:.76rem;color:var(--suave);text-align:center;margin-top:6px}
   /* ---------- Catálogo para apadrinar ---------- */
   .cargando{text-align:center;color:var(--suave);padding:30px 0;font-weight:700}
@@ -708,8 +715,10 @@ function pintarAdopciones() {
         <h3>${esc(p.Nombre)}</h3>
         <div class="datos"><i class="fa-solid ${p.Sexo === 'Hembra' ? 'fa-venus' : 'fa-mars'}"></i> ${esc(p.Sexo)}${p.Edad ? ' · ' + esc(p.Edad) : ''} · ${esc(p.Tamano)}</div>
         ${p.Ubicacion ? `<div class="ubic"><i class="fa-solid fa-location-dot"></i> ${esc(p.Ubicacion)}</div>` : ''}
+        ${p.Historia ? `<div class="hist-tarj ${textoPlano(p.Historia).length > 420 ? 'larga' : ''}">${formatoHistoria(p.Historia)}</div>` : ''}
         ${botonesContacto(p)}
-        ${p.Historia || p.Foto2 ? `<button type="button" class="ver-hist" onclick="fichaAdopcion('${esc(p.ID)}')"><i class="fa-solid ${p.Historia ? 'fa-book-open' : 'fa-images'}"></i> ${p.Historia ? 'Conocer su historia' : 'Ver más fotos'}</button>` : ''}
+        ${(() => { const larga = p.Historia && textoPlano(p.Historia).length > 420;
+          return larga || p.Foto2 ? `<button type="button" class="ver-hist" onclick="fichaAdopcion('${esc(p.ID)}')"><i class="fa-solid ${larga ? 'fa-book-open' : 'fa-images'}"></i> ${larga ? 'Leer su historia completa' : 'Ver más fotos'}</button>` : ''; })()}
       </div>
     </article>`).join('') + '</div>';
 }
@@ -747,7 +756,7 @@ function adopcionesDemo() {
     { ID: 'P-1', Nombre: 'Canela', Sexo: 'Hembra', Edad: '2 años', Tamano: 'Mediano', Ubicacion: 'Hogar temporal en Pinar Quemado', Enlace: '', Foto1: f('#F39A35', '🐕'), Foto2: f('#25A9A0', '🐾'),
       Historia: '# 🐾 Hola, soy Canela\n\nMe encontraron cerca del parque. Soy **súper cariñosa** y me llevo bien con otros perritos.' },
     { ID: 'P-4', Nombre: 'Rocky', Sexo: 'Macho', Edad: '1 año', Tamano: 'Grande', Ubicacion: 'Jarabacoa centro', Enlace: '', Foto1: f('#9fd8d2', '🦮'), Foto2: '',
-      Historia: '' }
+      Historia: 'Lo encontramos debajo de un carro en el centro del pueblo. Es **juguetón y noble**, ya está vacunado y le encanta jugar con pelotas.' }
   ] };
 }
 function cerrarFicha() {
