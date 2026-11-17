@@ -111,6 +111,19 @@
   .puntos.sobre{position:absolute;left:0;right:0;bottom:8px;margin:0}
   .puntos.sobre span{background:rgba(255,255,255,.65);box-shadow:0 0 0 1px rgba(0,0,0,.15)}
   .puntos.sobre span.act{background:#fff}
+  .hogar{margin-top:30px;padding-top:22px;border-top:2px dashed var(--borde);text-align:center}
+  .hogar h2{font-family:'Baloo 2',sans-serif;color:var(--esmeralda);font-size:1.7rem;line-height:1.1}
+  .hogar h2 i{color:var(--naranja)}
+  .hogar-sub{color:var(--suave);margin:6px auto 18px;max-width:520px}
+  .hogar-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:18px;max-width:1000px;margin:0 auto}
+  .hogar-item{margin:0;width:150px}
+  .hogar-foto{position:relative;aspect-ratio:1/1;border-radius:50%;overflow:hidden;border:4px solid #fff;box-shadow:0 6px 16px rgba(22,132,91,.18);background:#e3f5f3}
+  .hogar-foto img{width:100%;height:100%;object-fit:cover;object-position:center 30%;display:block}
+  .hogar-sello{position:absolute;left:50%;bottom:8%;transform:translateX(-50%);background:var(--esmeralda);color:#fff;font-size:.68rem;font-weight:800;padding:3px 9px;border-radius:20px;white-space:nowrap}
+  .hogar-item figcaption{margin-top:8px}
+  .hogar-item b{display:block;font-family:'Baloo 2',sans-serif;font-size:1.1rem;color:var(--tinta);line-height:1.1}
+  .hogar-item small{color:var(--suave);font-weight:700;font-size:.8rem;text-transform:capitalize}
+  @media (max-width:480px){.hogar-grid{gap:10px}.hogar-item{width:calc((100% - 20px) / 3)}.hogar-sello{font-size:.58rem;padding:2px 6px}.hogar-item b{font-size:.95rem}}
   .nota-ig{font-size:.76rem;color:var(--suave);text-align:center;margin-top:6px}
   /* ---------- Catálogo para apadrinar ---------- */
   .cargando{text-align:center;color:var(--suave);padding:30px 0;font-weight:700}
@@ -685,7 +698,7 @@ function activarGaleria() {
 }
 
 // ---------- Adopta un perrito ----------
-const ADO = { perritos: null, whatsapp: '', instagram: 'jarabarescata' };
+const ADO = { perritos: null, adoptados: [], whatsapp: '', instagram: 'jarabarescata' };
 const waAdop = p => 'https://wa.me/' + ADO.whatsapp + '?text=' + encodeURIComponent('Hola, vi a ' + p.Nombre + ' en JarabaRescata y me interesa adoptar' + (p.Sexo === 'Hembra' ? 'la' : 'lo') + ' 🏡🐶');
 // El enlace directo al chat (ig.me) no funciona en todos los dispositivos: se abre el perfil y desde ahí "Enviar mensaje"
 const igAdop = () => 'https://www.instagram.com/' + encodeURIComponent(ADO.instagram) + '/';
@@ -707,7 +720,7 @@ async function cargarAdopciones(forzar) {
       r = await resp.json();
     } else { await new Promise(ok => setTimeout(ok, 500)); r = adopcionesDemo(); }
     if (!r.ok) throw new Error(r.error || 'No se pudieron cargar los perritos.');
-    ADO.perritos = r.perritos || []; ADO.whatsapp = String(r.whatsapp || '').replace(/\D/g, ''); if (r.instagram) ADO.instagram = r.instagram;
+    ADO.perritos = r.perritos || []; ADO.adoptados = r.adoptados || []; ADO.whatsapp = String(r.whatsapp || '').replace(/\D/g, ''); if (r.instagram) ADO.instagram = r.instagram;
     pintarAdopciones();
     let pid = ''; try { pid = new URLSearchParams(location.search).get('perrito'); } catch (e) {}
     if (pid && ADO.perritos.some(p => p.ID === pid)) fichaAdopcion(pid);
@@ -720,7 +733,7 @@ async function cargarAdopciones(forzar) {
 function pintarAdopciones() {
   const lista = ADO.perritos;
   if (!lista.length) {
-    $('listaAdop').innerHTML = '<p class="cargando"><i class="fa-solid fa-house-chimney" style="font-size:2rem;color:var(--esmeralda)"></i><br>Por ahora no tenemos perritos en adopción. ¡Síguenos en Instagram para enterarte!</p>';
+    $('listaAdop').innerHTML = '<p class="cargando"><i class="fa-solid fa-house-chimney" style="font-size:2rem;color:var(--esmeralda)"></i><br>Por ahora no tenemos perritos en adopción. ¡Síguenos en Instagram para enterarte!</p>' + htmlAdoptados();
     return;
   }
   // Tarjeta completa: foto(s) arriba, datos, historia entera y botones de contacto (sin ventanas extra)
@@ -751,6 +764,23 @@ function pintarAdopciones() {
     [...pts.children].forEach((sp, i) => sp.onclick = () => g.scrollTo({ left: i * g.clientWidth, behavior: 'smooth' }));
     g.addEventListener('scroll', () => { const i = Math.round(g.scrollLeft / g.clientWidth); [...pts.children].forEach((x, k) => x.classList.toggle('act', i === k)); }, { passive: true });
   });
+  $('listaAdop').insertAdjacentHTML('beforeend', htmlAdoptados());
+}
+
+// Sección "¡Ya tienen hogar!": solo foto, nombre y mes de adopción (nada de la familia adoptante)
+function htmlAdoptados() {
+  const l = ADO.adoptados || []; if (!l.length) return '';
+  const MES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+  const cuando = f => { const m = String(f || '').match(/^(\d{4})-(\d{2})/); return m ? MES[+m[2] - 1] + ' ' + m[1] : ''; };
+  return `<section class="hogar">
+    <h2><i class="fa-solid fa-house-chimney"></i> ¡Ya tienen hogar!</h2>
+    <p class="hogar-sub">${l.length === 1 ? 'Este perrito ya encontró' : 'Estos ' + l.length + ' perritos ya encontraron'} una familia gracias a personas como tú. 💚</p>
+    <div class="hogar-grid">${l.map(p => `
+      <figure class="hogar-item">
+        <div class="hogar-foto"><img src="${fotoUrl(p.Foto1, 400)}" alt="${esc(p.Nombre)}" loading="lazy" onerror="this.src=SIN_FOTO"><span class="hogar-sello"><i class="fa-solid fa-heart"></i> Adoptad${p.Sexo === 'Hembra' ? 'a' : 'o'}</span></div>
+        <figcaption><b>${esc(p.Nombre)}</b>${cuando(p.FechaAdopcion) ? `<small>${cuando(p.FechaAdopcion)}</small>` : ''}</figcaption>
+      </figure>`).join('')}</div>
+  </section>`;
 }
 
 function fichaAdopcion(id) {
@@ -787,6 +817,10 @@ function adopcionesDemo() {
       Historia: '# 🐾 Hola, soy Canela\n\nMe encontraron cerca del parque. Soy **súper cariñosa** y me llevo bien con otros perritos.' },
     { ID: 'P-4', Nombre: 'Rocky', Sexo: 'Macho', Edad: '1 año', Tamano: 'Grande', Ubicacion: 'Jarabacoa centro', Enlace: '', Foto1: f('#9fd8d2', '🦮'), Foto2: '',
       Historia: 'Lo encontramos debajo de un carro en el centro del pueblo. Es **juguetón y noble**, ya está vacunado y le encanta jugar con pelotas.' }
+  ], adoptados: [
+    { ID: 'P-9', Nombre: 'Luna', Sexo: 'Hembra', Foto1: f('#25A9A0', '🐕'), FechaAdopcion: '2026-11-10' },
+    { ID: 'P-8', Nombre: 'Bruno', Sexo: 'Macho', Foto1: f('#F39A35', '🐶'), FechaAdopcion: '2026-10-22' },
+    { ID: 'P-7', Nombre: 'Nala', Sexo: 'Hembra', Foto1: f('#16845B', '🦮'), FechaAdopcion: '' }
   ] };
 }
 function cerrarFicha() {
