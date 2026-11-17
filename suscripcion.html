@@ -96,10 +96,15 @@
   .hist-tarj ul,.hist-tarj ol{margin:0 0 8px 20px}
   /* Si la historia es larga, se muestra el inicio y "Leer más" abre la ficha */
   .hist-tarj.larga{display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden}
-  .cat-adop{align-items:start}
-  .cat-adop .tarj .cuerpo{display:flex;flex-direction:column}
+  /* Adopciones: 2 tarjetas por fila en pantallas anchas, todas de la misma altura;
+     el recuadro de contacto queda siempre abajo */
+  .cat-adop .tarj .cuerpo{display:flex;flex-direction:column;flex:1}
   .cat-adop .historia{margin:4px 0 12px}
-  .cat-adop .adoptar{margin-top:6px}
+  .cat-adop .adoptar{margin-top:auto}
+  .cat-adop .vid{margin-bottom:14px}
+  @media (min-width:700px){
+    body.ancho .cat.cat-adop{grid-template-columns:repeat(2,1fr);grid-auto-rows:1fr;align-items:stretch;max-width:1000px;margin:0 auto}
+  }
   .cat-adop .foto{cursor:default}
   .mini-gal{position:absolute;inset:0;height:100%}
   .mini-gal img{position:static !important;flex:0 0 100%;width:100%;height:100%;aspect-ratio:auto;object-fit:cover;object-position:center 30%}
@@ -732,8 +737,8 @@ function pintarAdopciones() {
         <div class="datos"><i class="fa-solid ${p.Sexo === 'Hembra' ? 'fa-venus' : 'fa-mars'}"></i> ${esc(p.Sexo)}${p.Edad ? ' · ' + esc(p.Edad) : ''} · ${esc(p.Tamano)}</div>
         ${p.Ubicacion ? `<div class="ubic"><i class="fa-solid fa-location-dot"></i> ${esc(p.Ubicacion)}</div>` : ''}
         ${p.Historia ? `<div class="historia">${formatoHistoria(p.Historia)}</div>` : ''}
-        ${p.Enlace ? `<p style="margin-bottom:12px"><a href="${esc(p.Enlace)}" target="_blank" rel="noopener" style="color:var(--turquesa);font-weight:800;text-decoration:none"><i class="fa-solid fa-video"></i> Ver su video</a></p>` : ''}
-        <div class="adoptar" style="margin-top:auto">
+        ${p.Enlace ? `<p class="vid"><a href="${esc(p.Enlace)}" target="_blank" rel="noopener" style="color:var(--turquesa);font-weight:800;text-decoration:none"><i class="fa-solid fa-video"></i> Ver su video</a></p>` : ''}
+        <div class="adoptar">
           <h3><i class="fa-solid fa-house-chimney"></i> ¿Quieres adoptar a ${esc(p.Nombre)}?</h3>
           <p>Escríbenos y te contamos cómo es ${p.Sexo === 'Hembra' ? 'ella' : 'él'} y los pasos para la adopción.</p>
           ${botonesContacto(p)}
