@@ -1094,6 +1094,7 @@ function vPerritosLista() {
           <h3 onclick="modalFicha('${esc(p.ID)}')">${esc(p.Nombre)}</h3>
           <div class="datos"><i class="fa-solid ${p.Sexo === 'Hembra' ? 'fa-venus' : 'fa-mars'}"></i> ${esc(p.Sexo)}${p.Edad ? ' · ' + esc(p.Edad) : ''} · ${esc(p.Tamano)}</div>
           ${p.Historia ? `<p class="hist">${esc(textoPlano(p.Historia))}</p>` : ''}
+          ${p.Estado === 'Adoptado' && p.FechaAdopcion ? `<div class="datos" style="color:var(--esmeralda)"><i class="fa-solid fa-house-chimney"></i> Adoptado el ${fechaCorta(p.FechaAdopcion)}</div>` : ''}
           ${p.EnAdopcion === 'Sí' && p.Ubicacion ? `<div class="datos"><i class="fa-solid fa-location-dot" style="color:var(--naranja)"></i> ${esc(p.Ubicacion)}</div>` : ''}
           ${enPadrinos(p) ? htmlCobertura(p) : ''}
           <div class="pie-p">
@@ -1911,6 +1912,7 @@ async function demoApi(action, d) {
     case 'guardarPerrito': {
       const toUrl = f => f ? 'data:' + f.tipo + ';base64,' + f.base64 : '';
       const datos = { ...d, Visible: d.Visible ? 'Sí' : 'No', EnAdopcion: d.EnAdopcion ? 'Sí' : 'No' }; delete datos.foto1; delete datos.foto2; delete datos.quitarFoto2;
+      datos.FechaAdopcion = datos.Estado === 'Adoptado' ? D.hoy : '';
       if (d.ID) {
         const pe = D.perritos.find(x => x.ID === d.ID);
         Object.assign(pe, datos, { Foto1: d.foto1 ? toUrl(d.foto1) : pe.Foto1, Foto2: d.foto2 ? toUrl(d.foto2) : d.quitarFoto2 ? '' : pe.Foto2 });
