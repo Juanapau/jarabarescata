@@ -51,6 +51,10 @@ nav .btn{padding:8px 16px;font-size:.95rem;box-shadow:0 3px 0 var(--naranja-osc)
 .hero .acciones{display:flex;gap:12px;flex-wrap:wrap}
 .hero-fondo{position:absolute;z-index:0;right:0;top:50%;transform:translateY(-58%);height:150%;aspect-ratio:1/1;background-size:cover;background-position:center;background-repeat:no-repeat;-webkit-mask-image:linear-gradient(to right,transparent 0%,rgba(0,0,0,.45) 22%,#000 50%);mask-image:linear-gradient(to right,transparent 0%,rgba(0,0,0,.45) 22%,#000 50%)}
 .hero .btn-borde{background:rgba(255,255,255,.65)}
+.hero-redes{position:absolute;z-index:2;right:28px;bottom:24px;display:flex;gap:12px}
+.hero-redes a{width:50px;height:50px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:1.45rem;text-decoration:none;border:3px solid #fff;box-shadow:0 8px 20px rgba(0,0,0,.22);transition:transform .15s}
+.hero-redes a:hover{transform:translateY(-3px) scale(1.06)}
+.hero-redes a:focus-visible{outline:3px solid var(--turquesa);outline-offset:3px}
 .logros{display:flex;gap:12px;margin-top:26px;flex-wrap:wrap}
 .logros div{background:#fff;border-radius:16px;padding:10px 16px;box-shadow:0 8px 20px rgba(29,59,48,.08);min-width:110px}
 .logros b{display:block;font-family:'Baloo 2';font-size:1.8rem;line-height:1;color:var(--esmeralda)}
@@ -151,6 +155,8 @@ footer b{font-family:'Baloo 2';font-size:1.3rem;color:#fff;display:block}
   .hero .cont{display:block;min-height:0;margin-top:-56px}
   .quienes,.contacto{grid-template-columns:1fr}
   .hero h1{font-size:2.3rem}
+  .hero-redes{position:static;justify-content:center;margin-top:22px}
+  .hero-redes a{width:46px;height:46px;font-size:1.3rem}
   .hero-fondo{position:relative;top:auto;right:auto;transform:none;width:100%;height:320px;aspect-ratio:auto;background-position:center 64%;-webkit-mask-image:linear-gradient(to bottom,#000 55%,transparent);mask-image:linear-gradient(to bottom,#000 55%,transparent)}
   .titulo h2{font-size:1.8rem}
   section.bloque{padding:46px 0}
@@ -195,6 +201,11 @@ footer b{font-family:'Baloo 2';font-size:1.3rem;color:#fff;display:block}
         <div><b id="sPersonas" class="carga">—</b><span>personas ayudando</span></div>
       </div>
     </div>
+  </div>
+  <div class="hero-redes">
+    <a class="wa" href="https://wa.me/18297163378?text=Hola%20JarabaRescata%2C%20les%20escribo%20desde%20la%20p%C3%A1gina%20web." target="_blank" rel="noopener" aria-label="WhatsApp" title="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+    <a class="ig" href="https://www.instagram.com/jarabarescata/" target="_blank" rel="noopener" aria-label="Instagram" title="Instagram"><i class="fa-brands fa-instagram"></i></a>
+    <a class="fb" href="https://www.facebook.com/share/1cp5Hr7iwk/" target="_blank" rel="noopener" aria-label="Facebook" title="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
   </div>
 </section>
 
