@@ -267,12 +267,12 @@
     </section>
 
     <section id="vAdoptar" style="display:none">
-      <button type="button" class="volver" onclick="mostrarVista('eleccion')"><i class="fa-solid fa-arrow-left"></i> Volver</button>
+      <button type="button" class="volver" onclick="volverInicio()"><i class="fa-solid fa-arrow-left"></i> Volver</button>
       <div id="listaAdop"><p class="cargando"><i class="fa-solid fa-paw fa-bounce"></i><br>Cargando perritos…</p></div>
     </section>
 
     <section id="vApadrinar" style="display:none">
-      <button type="button" class="volver" onclick="mostrarVista('eleccion')"><i class="fa-solid fa-arrow-left"></i> Volver</button>
+      <button type="button" class="volver" onclick="volverInicio()"><i class="fa-solid fa-arrow-left"></i> Volver</button>
       <div id="catalogo"><p class="cargando"><i class="fa-solid fa-paw fa-bounce"></i><br>Cargando perritos…</p></div>
     </section>
 
@@ -370,7 +370,7 @@
     </section>
 
     <form id="formulario" novalidate style="display:none">
-      <button type="button" class="volver" onclick="mostrarVista('eleccion')"><i class="fa-solid fa-arrow-left"></i> Volver</button>
+      <button type="button" class="volver" onclick="volverInicio()"><i class="fa-solid fa-arrow-left"></i> Volver</button>
 
       <div class="campo">
         <label for="nombre"><i class="fa-solid fa-user"></i> Nombre completo</label>
@@ -424,7 +424,7 @@
     </form>
 
     <form id="formUnica" novalidate style="display:none">
-      <button type="button" class="volver" onclick="mostrarVista('eleccion')"><i class="fa-solid fa-arrow-left"></i> Volver</button>
+      <button type="button" class="volver" onclick="volverInicio()"><i class="fa-solid fa-arrow-left"></i> Volver</button>
 
       <label class="check"><input type="checkbox" id="anonimoU"> <span><i class="fa-solid fa-user-secret" style="color:var(--turquesa)"></i> Prefiero que mi donación sea anónima</span></label>
 
@@ -546,6 +546,14 @@ const TEXTOS = {
   apadrinar:['Apadrina un <span>perrito</span>', 'Elige a un perrito y cúbrele el alimento, la atención veterinaria o ambos, cada mes. Te contaremos cómo va en nuestras redes.'],
   adoptar:  ['Adopta un <span>perrito</span>', 'Estos perritos buscan un hogar para siempre. Escríbenos por WhatsApp o Instagram para conocerles.']
 };
+// Si la persona llegó desde la página pública (jarabarescata.com), "Volver" la regresa allí;
+// si no, la regresa a los botones de elección de este formulario.
+const DESDE_WEB = (() => { try { return new URLSearchParams(location.search).get('desde') === 'web'; } catch (e) { return false; } })();
+function volverInicio() {
+  if (DESDE_WEB) location.href = './';
+  else mostrarVista('eleccion');
+}
+
 function mostrarVista(v) {
   $('alerta').classList.remove('ver');
   $('eleccion').style.display = v === 'eleccion' ? 'block' : 'none';
