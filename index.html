@@ -87,12 +87,12 @@ section.bloque{padding:64px 0}
 
 /* Formas de ayudar */
 .ayudar{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
-.forma{text-decoration:none;color:inherit;cursor:pointer;background:#fff;border:2px solid var(--borde);border-radius:20px;padding:22px 18px;display:flex;flex-direction:column;gap:10px;transition:transform .15s,box-shadow .15s}
+.forma{text-decoration:none;color:inherit;cursor:pointer;background:#fff;border:2px solid var(--borde);border-radius:20px;padding:22px 18px;display:flex;flex-direction:column;gap:10px;transition:transform .15s,box-shadow .15s,border-color .15s}
 .forma:focus-visible{outline:3px solid var(--turquesa);outline-offset:3px}
 .forma:active{transform:scale(.98)}
 .forma:hover .ir i{transform:translateX(4px)}
 .forma .ir i{transition:transform .15s}
-.forma:hover{transform:translateY(-4px);box-shadow:0 14px 28px rgba(29,59,48,.1)}
+.forma:hover{border-color:var(--c);transform:translateY(-4px);box-shadow:0 14px 28px rgba(29,59,48,.1)}
 .forma .ico{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;color:#fff;font-size:1.5rem}
 .forma h3{font-size:1.35rem}
 .forma p{color:var(--suave);font-size:.95rem;flex:1}
@@ -237,16 +237,16 @@ footer b{font-family:'Baloo 2';font-size:1.3rem;color:#fff;display:block}
   <div class="cont">
     <div class="titulo"><small>Cómo ayudar</small><h2>Elige cómo quieres ayudar</h2><p>Toda ayuda cuenta. Elige la forma que mejor se ajuste a ti.</p></div>
     <div class="ayudar">
-      <a class="forma" href="suscripcion.html?tipo=mensual"><div class="ico" style="background:var(--esmeralda)"><i class="fa-solid fa-paw"></i></div>
+      <a class="forma" href="suscripcion.html?tipo=mensual" style="--c:var(--esmeralda)"><div class="ico" style="background:var(--esmeralda)"><i class="fa-solid fa-paw"></i></div>
         <h3 style="color:var(--esmeralda)">Círculo de Patitas</h3><p>Un aporte mensual de RD$ 300, 400, 500 o el monto que elijas.</p>
         <span class="ir" style="color:var(--esmeralda)">Unirme <i class="fa-solid fa-arrow-right"></i></span></a>
-      <a class="forma" href="suscripcion.html?tipo=unica"><div class="ico" style="background:var(--naranja)"><i class="fa-solid fa-hand-holding-heart"></i></div>
+      <a class="forma" href="suscripcion.html?tipo=unica" style="--c:var(--naranja)"><div class="ico" style="background:var(--naranja)"><i class="fa-solid fa-hand-holding-heart"></i></div>
         <h3 style="color:var(--naranja-osc)">Donación única</h3><p>Un solo aporte, cuando quieras, del monto que puedas.</p>
         <span class="ir" style="color:var(--naranja-osc)">Donar <i class="fa-solid fa-arrow-right"></i></span></a>
-      <a class="forma" href="suscripcion.html?tipo=apadrinar"><div class="ico" style="background:var(--turquesa)"><i class="fa-solid fa-dog"></i></div>
+      <a class="forma" href="suscripcion.html?tipo=apadrinar" style="--c:var(--turquesa)"><div class="ico" style="background:var(--turquesa)"><i class="fa-solid fa-dog"></i></div>
         <h3 style="color:#17766f">Apadrina un perrito</h3><p>Cubre el alimento, la veterinaria o ambos de un perrito de la calle.</p>
         <span class="ir" style="color:#17766f">Ver perritos <i class="fa-solid fa-arrow-right"></i></span></a>
-      <a class="forma" href="suscripcion.html?tipo=adoptar"><div class="ico" style="background:var(--esmeralda-osc)"><i class="fa-solid fa-house-chimney"></i></div>
+      <a class="forma" href="suscripcion.html?tipo=adoptar" style="--c:var(--esmeralda-osc)"><div class="ico" style="background:var(--esmeralda-osc)"><i class="fa-solid fa-house-chimney"></i></div>
         <h3 style="color:var(--esmeralda-osc)">Adopta un perrito</h3><p>Conoce a los perritos que buscan un hogar para siempre.</p>
         <span class="ir" style="color:var(--esmeralda-osc)">Conocerlos <i class="fa-solid fa-arrow-right"></i></span></a>
     </div>
