@@ -209,6 +209,10 @@
   textarea:focus{border-color:var(--turquesa)}
   .exfoto{width:120px;height:120px;border-radius:50%;object-fit:cover;margin:0 auto 12px;display:block;border:4px solid #fff;box-shadow:0 6px 18px rgba(22,132,91,.2)}
   footer{text-align:center;margin-top:22px;color:var(--suave);font-size:.9rem}
+  .acepta{display:flex;gap:10px;align-items:flex-start;margin:4px 0 18px;padding:12px 14px;border:2px solid var(--borde);border-radius:12px;background:#fffdf8;font-size:.92rem;font-weight:600;cursor:pointer;line-height:1.45}
+  .acepta input{width:20px;height:20px;flex:none;margin-top:1px;accent-color:var(--esmeralda);padding:0}
+  .acepta:has(input:checked){border-color:var(--esmeralda);background:#e5f4ec}
+  .acepta a{color:var(--esmeralda);font-weight:800}
   footer a{color:var(--esmeralda);font-weight:800;text-decoration:none}
   body{-webkit-tap-highlight-color:transparent}
   @media (max-width:480px){
@@ -311,6 +315,7 @@
         <label id="mencionLbl"><i class="fa-solid fa-bullhorn"></i> ¿Te gustaría ser mencionado/a en las actualizaciones de tu ahijado?</label>
         <div class="opciones-si-no"><label><input type="radio" name="mencionA" value="Sí"> Sí</label><label><input type="radio" name="mencionA" value="No"> No</label></div>
       </div>
+      <label class="acepta"><input type="checkbox" id="aceptaA"> <span>Acepto que JarabaRescata use mis datos para gestionar mi aporte o solicitud, según la <a href="privacidad.html" target="_blank" rel="noopener">política de privacidad</a>.</span></label>
       <button class="boton turq" type="submit" id="enviarA"><i class="fa-solid fa-dog"></i> Confirmar apadrinamiento</button>
     </form>
 
@@ -356,6 +361,7 @@
           <option>Cualquier horario</option>
         </select>
       </div>
+      <label class="acepta"><input type="checkbox" id="aceptaAd"> <span>Acepto que JarabaRescata use mis datos para gestionar mi aporte o solicitud, según la <a href="privacidad.html" target="_blank" rel="noopener">política de privacidad</a>.</span></label>
       <button class="boton" type="submit" id="enviarAd"><i class="fa-solid fa-house-chimney"></i> Enviar solicitud</button>
     </form>
 
@@ -420,6 +426,7 @@
         </select>
       </div>
 
+      <label class="acepta"><input type="checkbox" id="acepta"> <span>Acepto que JarabaRescata use mis datos para gestionar mi aporte o solicitud, según la <a href="privacidad.html" target="_blank" rel="noopener">política de privacidad</a>.</span></label>
       <button class="boton" type="submit" id="enviar"><i class="fa-solid fa-paw"></i> Unirme al Círculo</button>
     </form>
 
@@ -466,6 +473,7 @@
         </select>
       </div>
 
+      <label class="acepta"><input type="checkbox" id="aceptaU"> <span>Acepto que JarabaRescata use mis datos para gestionar mi aporte o solicitud, según la <a href="privacidad.html" target="_blank" rel="noopener">política de privacidad</a>.</span></label>
       <button class="boton verde" type="submit" id="enviarU"><i class="fa-solid fa-heart"></i> Registrar mi donación</button>
     </form>
 
@@ -489,7 +497,8 @@
   </main>
 
   <footer>
-    Sigue los casos en Instagram <a href="https://www.instagram.com/jarabarescata/" target="_blank" rel="noopener">@jarabarescata</a>
+    Sigue los casos en Instagram <a href="https://www.instagram.com/jarabarescata/" target="_blank" rel="noopener">@jarabarescata</a><br>
+    <a href="privacidad.html" style="font-weight:700;font-size:.85rem">Política de privacidad</a>
   </footer>
 </div>
 
@@ -876,6 +885,7 @@ $('formApad').addEventListener('submit', async e => {
   if (!d.metodo) return mostrarError('Selecciona el método de pago.');
   if (d.metodo === 'Entrega personal' && !d.punto) return mostrarError('Elige a quién le entregarás tu aporte.');
   if (!d.mencionar) return mostrarError('Indica si te gustaría ser mencionado/a en las actualizaciones.');
+  if (!$('aceptaA').checked) return mostrarError('Para continuar, marca la casilla de aceptación de la política de privacidad.');
   const btn = $('enviarA');
   btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
   try {
@@ -942,6 +952,7 @@ $('formAdop').addEventListener('submit', async e => {
   if (!d.otrasMascotas) return mostrarError('Indica si tienes otras mascotas.');
   if (d.motivo.length < 10) return mostrarError('Cuéntanos por qué quieres adoptar a ' + adoptando.Nombre + '.');
   if (!d.horario) return mostrarError('Elige en qué horario podemos llamarte.');
+  if (!$('aceptaAd').checked) return mostrarError('Para continuar, marca la casilla de aceptación de la política de privacidad.');
   const btn = $('enviarAd');
   btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
   try {
@@ -1008,6 +1019,7 @@ $('formUnica').addEventListener('submit', async e => {
   if (!d.metodo) return mostrarError('Selecciona el método de pago.');
   if (d.metodo === 'Entrega personal' && !d.punto) return mostrarError('Elige a quién le entregarás tu aporte.');
 
+  if (!$('aceptaU').checked) return mostrarError('Para continuar, marca la casilla de aceptación de la política de privacidad.');
   const btn = $('enviarU');
   btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
   try {
@@ -1049,6 +1061,7 @@ $('formulario').addEventListener('submit', async e => {
   if (!d.metodo) return mostrarError('Selecciona el método de pago.');
   if (d.metodo === 'Entrega personal' && !d.punto) return mostrarError('Elige a quién le entregarás tu aporte.');
 
+  if (!$('acepta').checked) return mostrarError('Para continuar, marca la casilla de aceptación de la política de privacidad.');
   const btn = $('enviar');
   btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
   try {
