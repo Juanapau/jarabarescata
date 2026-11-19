@@ -213,6 +213,12 @@
   .acepta input{width:20px;height:20px;flex:none;margin-top:1px;accent-color:var(--esmeralda);padding:0}
   .acepta:has(input:checked){border-color:var(--esmeralda);background:#e5f4ec}
   .acepta a{color:var(--esmeralda);font-weight:800}
+  .priv-capa{position:fixed;inset:0;z-index:100;background:rgba(29,59,48,.55);display:none;align-items:center;justify-content:center;padding:14px}
+  .priv-capa.ver{display:flex}
+  .priv-caja{background:var(--crema);width:100%;max-width:760px;height:min(90vh,900px);border-radius:20px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.3)}
+  .priv-caja iframe{flex:1;width:100%;border:0;background:var(--crema)}
+  .priv-pie{padding:12px 14px;border-top:1px solid var(--borde);background:#fff}
+  .priv-pie .boton{margin:0}
   footer a{color:var(--esmeralda);font-weight:800;text-decoration:none}
   body{-webkit-tap-highlight-color:transparent}
   @media (max-width:480px){
@@ -315,7 +321,7 @@
         <label id="mencionLbl"><i class="fa-solid fa-bullhorn"></i> ¿Te gustaría ser mencionado/a en las actualizaciones de tu ahijado?</label>
         <div class="opciones-si-no"><label><input type="radio" name="mencionA" value="Sí"> Sí</label><label><input type="radio" name="mencionA" value="No"> No</label></div>
       </div>
-      <label class="acepta"><input type="checkbox" id="aceptaA"> <span>Acepto que JarabaRescata use mis datos para gestionar mi aporte o solicitud, según la <a href="privacidad.html" target="_blank" rel="noopener">política de privacidad</a>.</span></label>
+      <label class="acepta"><input type="checkbox" id="aceptaA"> <span>Acepto que JarabaRescata use mis datos para gestionar mi aporte o solicitud, según la <a href="privacidad.html" class="ver-privacidad">política de privacidad</a>.</span></label>
       <button class="boton turq" type="submit" id="enviarA"><i class="fa-solid fa-dog"></i> Confirmar apadrinamiento</button>
     </form>
 
@@ -361,7 +367,7 @@
           <option>Cualquier horario</option>
         </select>
       </div>
-      <label class="acepta"><input type="checkbox" id="aceptaAd"> <span>Acepto que JarabaRescata use mis datos para gestionar mi aporte o solicitud, según la <a href="privacidad.html" target="_blank" rel="noopener">política de privacidad</a>.</span></label>
+      <label class="acepta"><input type="checkbox" id="aceptaAd"> <span>Acepto que JarabaRescata use mis datos para gestionar mi aporte o solicitud, según la <a href="privacidad.html" class="ver-privacidad">política de privacidad</a>.</span></label>
       <button class="boton" type="submit" id="enviarAd"><i class="fa-solid fa-house-chimney"></i> Enviar solicitud</button>
     </form>
 
@@ -426,7 +432,7 @@
         </select>
       </div>
 
-      <label class="acepta"><input type="checkbox" id="acepta"> <span>Acepto que JarabaRescata use mis datos para gestionar mi aporte o solicitud, según la <a href="privacidad.html" target="_blank" rel="noopener">política de privacidad</a>.</span></label>
+      <label class="acepta"><input type="checkbox" id="acepta"> <span>Acepto que JarabaRescata use mis datos para gestionar mi aporte o solicitud, según la <a href="privacidad.html" class="ver-privacidad">política de privacidad</a>.</span></label>
       <button class="boton" type="submit" id="enviar"><i class="fa-solid fa-paw"></i> Unirme al Círculo</button>
     </form>
 
@@ -473,7 +479,7 @@
         </select>
       </div>
 
-      <label class="acepta"><input type="checkbox" id="aceptaU"> <span>Acepto que JarabaRescata use mis datos para gestionar mi aporte o solicitud, según la <a href="privacidad.html" target="_blank" rel="noopener">política de privacidad</a>.</span></label>
+      <label class="acepta"><input type="checkbox" id="aceptaU"> <span>Acepto que JarabaRescata use mis datos para gestionar mi aporte o solicitud, según la <a href="privacidad.html" class="ver-privacidad">política de privacidad</a>.</span></label>
       <button class="boton verde" type="submit" id="enviarU"><i class="fa-solid fa-heart"></i> Registrar mi donación</button>
     </form>
 
@@ -498,7 +504,7 @@
 
   <footer>
     Sigue los casos en Instagram <a href="https://www.instagram.com/jarabarescata/" target="_blank" rel="noopener">@jarabarescata</a><br>
-    <a href="privacidad.html" style="font-weight:700;font-size:.85rem">Política de privacidad</a>
+    <a href="privacidad.html" class="ver-privacidad" style="font-weight:700;font-size:.85rem">Política de privacidad</a>
   </footer>
 </div>
 
@@ -1141,6 +1147,29 @@ function mostrarExito(d, dep, tipo = 'mensual'){
 // Enlaces directos: ?tipo=mensual, ?tipo=unica, ?tipo=apadrinar y ?tipo=apadrinar&perrito=ID
 // (va al final para que todo lo anterior ya esté cargado)
 (() => { let t = ''; try { t = new URLSearchParams(location.search).get('tipo'); } catch (e) {} if (['mensual', 'unica', 'apadrinar', 'adoptar'].indexOf(t) >= 0) mostrarVista(t); })();
+</script>
+<div class="priv-capa" id="privCapa" role="dialog" aria-modal="true" aria-label="Política de privacidad">
+  <div class="priv-caja">
+    <iframe id="privMarco" title="Política de privacidad"></iframe>
+    <div class="priv-pie"><button type="button" class="boton verde" id="privCerrar"><i class="fa-solid fa-arrow-left"></i> Volver al formulario</button></div>
+  </div>
+</div>
+<script>
+// La política de privacidad se abre encima del formulario: así la persona no pierde lo que escribió ni se confunde de página.
+(() => {
+  const capa = document.getElementById('privCapa'), marco = document.getElementById('privMarco');
+  const cerrar = () => { capa.classList.remove('ver'); document.body.style.overflow = ''; };
+  document.addEventListener('click', e => {
+    const a = e.target.closest('a.ver-privacidad');
+    if (!a) return;
+    e.preventDefault();
+    if (!marco.src) marco.src = 'privacidad.html?vista=formulario';
+    capa.classList.add('ver'); document.body.style.overflow = 'hidden';
+  });
+  document.getElementById('privCerrar').onclick = cerrar;
+  capa.addEventListener('click', e => { if (e.target === capa) cerrar(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && capa.classList.contains('ver')) cerrar(); });
+})();
 </script>
 </body>
 </html>
