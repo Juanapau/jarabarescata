@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#16845B">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -167,6 +167,16 @@ th.monto{text-align:right}
 .c-rojo{background:var(--rojo-claro);color:var(--rojo)}
 .c-gris{background:var(--gris-claro);color:var(--suave)}
 .c-turq{background:var(--turq-claro);color:#17766f}
+.c-petroleo{background:#e2eef1;color:#164B59}
+.num-menu{margin-left:auto;background:var(--naranja);color:#fff;border-radius:20px;font-size:.72rem;font-weight:800;padding:1px 8px;line-height:1.5}
+.areas-vol{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
+.dias-vol{display:flex;gap:3px;flex-wrap:wrap}
+.dias-vol span{min-width:30px;height:24px;padding:0 4px;border-radius:7px;display:grid;place-items:center;font-size:.72rem;font-weight:800;background:var(--gris-claro);color:#a6aea9}
+.dias-vol span.on{background:#164B59;color:#fff}
+.marcas-vol{display:flex;flex-wrap:wrap;gap:6px}
+.marcas-vol label{display:inline-flex;align-items:center;gap:6px;border:2px solid var(--borde);border-radius:10px;padding:6px 10px;font-weight:700;font-size:.85rem;margin:0;cursor:pointer;background:#fffdf8}
+.marcas-vol input{width:16px;height:16px;padding:0;accent-color:#164B59}
+.marcas-vol label:has(input:checked){border-color:#164B59;background:#e2eef1}
 .acc{display:flex;gap:6px;justify-content:flex-end}
 a.enlace{color:var(--turquesa);font-weight:800;text-decoration:none}
 
@@ -297,6 +307,7 @@ body{-webkit-tap-highlight-color:transparent}
       <button data-vista="padrinos"><i class="fa-solid fa-shield-dog"></i> Padrinos</button>
       <button data-vista="adopciones"><i class="fa-solid fa-house-chimney"></i> Adopciones</button>
       <button data-vista="colaboradores"><i class="fa-solid fa-users"></i> Colaboradores</button>
+      <button data-vista="voluntarios"><i class="fa-solid fa-hands-holding-circle"></i> Voluntarios <span class="num-menu oculto" id="numVol"></span></button>
       <button data-vista="entradas"><i class="fa-solid fa-arrow-down"></i> Entradas</button>
       <button data-vista="salidas"><i class="fa-solid fa-arrow-up"></i> Salidas</button>
       <button data-vista="informes"><i class="fa-solid fa-file-pdf"></i> Informes</button>
@@ -471,7 +482,7 @@ function aplicarDatos(r) { E.datos = r; if (r.sesion) E.sesion = r.sesion; }
 async function recargar() { try { await accion('datos', {}, 'Datos actualizados'); mostrar(E.vista); } catch (e) { toast(e.message); } }
 
 // ===================== NAVEGACIÓN =====================
-const TITULOS = { finanzas: 'Finanzas', resumen: 'Resumen', pagos: 'Control de pagos', donaciones: 'Donaciones únicas', perritos: 'Perritos', padrinos: 'Padrinos', adopciones: 'Adopciones', colaboradores: 'Colaboradores', entradas: 'Entradas', salidas: 'Salidas', informes: 'Informes', usuarios: 'Usuarios' };
+const TITULOS = { finanzas: 'Finanzas', resumen: 'Resumen', pagos: 'Control de pagos', donaciones: 'Donaciones únicas', perritos: 'Perritos', padrinos: 'Padrinos', adopciones: 'Adopciones', colaboradores: 'Colaboradores', voluntarios: 'Voluntarios', entradas: 'Entradas', salidas: 'Salidas', informes: 'Informes', usuarios: 'Usuarios' };
 $('menu').addEventListener('click', e => { const b = e.target.closest('button'); if (b) mostrar(b.dataset.vista); });
 
 function moverMes(d) {
@@ -486,9 +497,10 @@ function mostrar(v) {
   const ba = document.querySelector('#menu button.activo'); if (ba && innerWidth <= 860) ba.scrollIntoView({ inline: 'center', block: 'nearest' });
   $('tituloVista').textContent = TITULOS[v];
   $('txtMes').textContent = nombreMes(E.mes);
-  $('selMes').style.visibility = (v === 'colaboradores' || v === 'usuarios' || v === 'perritos' || v === 'padrinos' || v === 'adopciones') ? 'hidden' : 'visible';
+  $('selMes').style.visibility = (v === 'colaboradores' || v === 'usuarios' || v === 'perritos' || v === 'padrinos' || v === 'adopciones' || v === 'voluntarios') ? 'hidden' : 'visible';
+  contadorVoluntarios();
   if (esConsulta()) return ({ resumen: cResumen, finanzas: cFinanzas, perritos: cPerritos, informes: vInformes })[v] ? (({ resumen: cResumen, finanzas: cFinanzas, perritos: cPerritos, informes: vInformes })[v](), window.scrollTo(0, 0)) : mostrar('resumen');
-  ({ resumen: vResumen, pagos: vPagos, donaciones: vDonaciones, perritos: vPerritos, padrinos: vPadrinos, adopciones: vAdopciones, colaboradores: vColaboradores, entradas: vEntradas, salidas: vSalidas, informes: vInformes, usuarios: vUsuarios })[v]();
+  ({ resumen: vResumen, pagos: vPagos, donaciones: vDonaciones, perritos: vPerritos, padrinos: vPadrinos, adopciones: vAdopciones, colaboradores: vColaboradores, voluntarios: vVoluntarios, entradas: vEntradas, salidas: vSalidas, informes: vInformes, usuarios: vUsuarios })[v]();
   window.scrollTo(0, 0);
 }
 
@@ -749,6 +761,138 @@ function modalAdopcion(id) {
     const d = Object.fromEntries(new FormData(e.target)); d.ID = id;
     try { await accion('guardarAdopcion', d, 'Solicitud actualizada'); cerrarModal(); mostrar(E.vista); } catch (err) { errModal(err.message); }
   };
+}
+
+// ===================== VISTA: VOLUNTARIOS =====================
+const AREAS_VOL = ['Alimentar perritos en la calle', 'Llevarlos al veterinario', 'Hogar temporal', 'Jornadas de esterilización y vacunas', 'Medicar a los perritos', 'Gestionar adopciones', 'Gestionar hogares temporales', 'Otra'];
+const AREA_CORTA = { 'Alimentar perritos en la calle': 'Alimentar', 'Llevarlos al veterinario': 'Veterinario', 'Hogar temporal': 'Hogar temporal', 'Jornadas de esterilización y vacunas': 'Jornadas', 'Medicar a los perritos': 'Medicar', 'Gestionar adopciones': 'Adopciones', 'Gestionar hogares temporales': 'Gest. hogares' };
+const DIAS_VOL = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+const ESTADOS_VOL = ['Nuevo', 'Contactado', 'Activo', 'Inactivo'];
+const CHIP_VOL = { Nuevo: 'c-nar', Contactado: 'c-turq', Activo: 'c-verde', Inactivo: 'c-gris' };
+const listaVol = t => String(t || '').split(',').map(x => x.trim()).filter(Boolean);
+const areaBase = a => /^Otra:/.test(a) ? 'Otra' : a;
+function contadorVoluntarios() {
+  const el = $('numVol'); if (!el) return;
+  const n = esConsulta() ? 0 : (E.datos.voluntarios || []).filter(v => v.Estado === 'Nuevo').length;
+  el.textContent = n; el.classList.toggle('oculto', !n);
+}
+function diasVol(t) {
+  const l = listaVol(t);
+  return `<span class="dias-vol">${DIAS_VOL.map(d => `<span class="${l.indexOf(d) >= 0 ? 'on' : ''}" title="${d}">${d.slice(0, 3)}</span>`).join('')}</span>`;
+}
+function vVoluntarios() {
+  const todos = E.datos.voluntarios || [];
+  const fe = vVoluntarios.estado || 'Nuevos, contactados y activos', fa = vVoluntarios.area || 'Todas las áreas';
+  const cuenta = e => todos.filter(v => v.Estado === e).length;
+  const hogares = todos.filter(v => v.Estado === 'Activo' && listaVol(v.Areas).indexOf('Hogar temporal') >= 0).length;
+  $('vista').innerHTML = `
+  <div class="kpis">
+    <div class="kpi"><small>Total inscritos</small><b style="color:#164B59">${todos.length}</b><span class="det">${cuenta('Inactivo')} inactivos</span></div>
+    <div class="kpi"><small>Nuevos por contactar</small><b style="color:var(--naranja-osc)">${cuenta('Nuevo')}</b><span class="det">Escríbeles por WhatsApp</span></div>
+    <div class="kpi"><small>Activos</small><b style="color:var(--esmeralda)">${cuenta('Activo')}</b><span class="det">${cuenta('Contactado')} contactados</span></div>
+    <div class="kpi"><small>Hogares temporales</small><b style="color:var(--turquesa)">${hogares}</b><span class="det">Voluntarios activos que ofrecen hogar</span></div>
+  </div>
+  <div class="panel">
+    <h2>Voluntarios
+      <span style="display:flex;gap:8px;flex-wrap:wrap">
+        <select style="width:auto" onchange="vVoluntarios.estado=this.value;vVoluntariosTabla()">${opts(['Nuevos, contactados y activos', ...ESTADOS_VOL, 'Todos'], fe)}</select>
+        <select style="width:auto" onchange="vVoluntarios.area=this.value;vVoluntariosTabla()">${opts(['Todas las áreas', ...AREAS_VOL], fa)}</select>
+        <button class="btn btn-prim btn-mini" onclick="modalVoluntario()"><i class="fa-solid fa-plus"></i> Agregar</button>
+      </span></h2>
+    <input placeholder="Buscar por nombre, sector o teléfono…" value="${esc(vVoluntarios.q || '')}" oninput="vVoluntarios.q=this.value;vVoluntariosTabla()" style="margin-bottom:12px">
+    <div id="tablaVol"></div>
+  </div>`;
+  vVoluntariosTabla();
+}
+function vVoluntariosTabla() {
+  const todos = E.datos.voluntarios || [];
+  const fe = vVoluntarios.estado || 'Nuevos, contactados y activos', fa = vVoluntarios.area || 'Todas las áreas';
+  const q = String(vVoluntarios.q || '').toLowerCase().trim();
+  const orden = { Nuevo: 0, Contactado: 1, Activo: 2, Inactivo: 3 };
+  const lista = todos.filter(v => fe === 'Todos' || (fe === 'Nuevos, contactados y activos' ? v.Estado !== 'Inactivo' : v.Estado === fe))
+    .filter(v => fa === 'Todas las áreas' || listaVol(v.Areas).map(areaBase).indexOf(fa) >= 0)
+    .filter(v => !q || [v.Nombre, v.Sector, v.Telefono, v.Correo].join(' ').toLowerCase().indexOf(q) >= 0)
+    .sort((a, b) => (orden[a.Estado] ?? 9) - (orden[b.Estado] ?? 9) || String(b.FechaRegistro).localeCompare(String(a.FechaRegistro)));
+  $('tablaVol').innerHTML = lista.length ? `<div class="tabla-cont"><table><thead><tr><th>Voluntario/a</th><th>Sector</th><th>Quiere ayudar en</th><th>Días · Horario</th><th>Estado</th><th></th></tr></thead><tbody>
+    ${lista.map(v => `<tr>
+      <td><b>${esc(v.Nombre)}</b><br><a class="enlace" href="https://wa.me/${telWa(v.Telefono)}" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i> ${esc(v.Telefono)}</a><br><span class="ayuda">Inscrito/a el ${fechaCorta(v.FechaRegistro)}</span></td>
+      <td>${esc(v.Sector)}${v.Transporte && v.Transporte !== 'No tengo' ? `<br><span class="ayuda"><i class="fa-solid fa-${v.Transporte === 'Carro' ? 'car-side' : 'motorcycle'}"></i> ${esc(v.Transporte)}</span>` : ''}</td>
+      <td><div class="areas-vol">${listaVol(v.Areas).map(a => `<span class="chip c-petroleo">${esc(AREA_CORTA[a] || a)}</span>`).join('')}</div></td>
+      <td>${diasVol(v.Dias)}<span class="ayuda">${esc(v.Horario)}</span></td>
+      <td><span class="chip ${CHIP_VOL[v.Estado] || 'c-gris'}">${esc(v.Estado)}</span></td>
+      <td><div class="acc"><button class="btn ${v.Estado === 'Nuevo' ? 'btn-nar' : 'btn-sec'} btn-mini" onclick="modalVoluntario('${esc(v.ID)}')"><i class="fa-solid fa-eye"></i> Ver</button></div></td>
+    </tr>`).join('')}</tbody></table></div>`
+    : `<div class="vacio"><i class="fa-solid fa-hands-holding-circle"></i>${todos.length ? 'No hay voluntarios con este filtro.' : 'Todavía no hay voluntarios. Aparecerán aquí cuando alguien llene el formulario de voluntarios.'}</div>`;
+}
+function modalVoluntario(id) {
+  const v = id ? (E.datos.voluntarios || []).find(x => x.ID === id) : null;
+  if (id && !v) return;
+  const admin = E.sesion.rol === 'Administrador';
+  const areas = v ? listaVol(v.Areas) : [], otra = (areas.find(a => /^Otra:/.test(a)) || '').replace(/^Otra:\s*/, '');
+  const marcas = (nombre, lista, sel) => `<div class="marcas-vol">${lista.map(x => `<label><input type="checkbox" name="${nombre}" value="${esc(x)}" ${sel.indexOf(x) >= 0 ? 'checked' : ''}> ${esc(x)}</label>`).join('')}</div>`;
+  const editor = `
+    <div class="campo"><label>Nombre completo</label><input name="nombre" value="${esc(v ? v.Nombre : '')}" maxlength="120"></div>
+    <div class="campo"><label>Teléfono / WhatsApp</label><input name="telefono" value="${esc(v ? v.Telefono : '')}" maxlength="30"></div>
+    <div class="campo"><label>Correo ${v ? '' : '(opcional)'}</label><input name="correo" type="email" value="${esc(v ? v.Correo : '')}" maxlength="120"></div>
+    <div class="campo"><label>Sector</label><input name="sector" value="${esc(v ? v.Sector : '')}" maxlength="120"></div>
+    <div class="campo"><label>¿Mayor de edad?</label><select name="mayorEdad">${opts(['', 'Sí', 'No'], v ? v.MayorEdad : '')}</select></div>
+    <div class="campo"><label>Quiere ayudar en</label>${marcas('areas', AREAS_VOL, areas.map(areaBase))}
+      <input name="otraArea" value="${esc(otra)}" placeholder="Si marcaste Otra, ¿cuál?" style="margin-top:6px" maxlength="120"></div>
+    <div class="campo"><label>Días</label>${marcas('dias', DIAS_VOL, v ? listaVol(v.Dias) : [])}</div>
+    <div class="campo"><label>Horario</label>${marcas('horario', ['Mañana', 'Tarde', 'Noche'], v ? listaVol(v.Horario) : [])}</div>
+    <div class="campo"><label>Transporte</label><select name="transporte">${opts(['', 'Carro', 'Motor', 'No tengo'], v ? v.Transporte : '')}</select></div>
+    <div class="campo"><label>Experiencia con perros</label><textarea name="experiencia" rows="2" maxlength="600">${esc(v ? v.Experiencia : '')}</textarea></div>
+    <div class="campo"><label>Por qué quiere ser voluntario/a</label><textarea name="motivo" rows="2" maxlength="1000">${esc(v ? v.Motivo : '')}</textarea></div>`;
+  const msg = v ? encodeURIComponent('Hola ' + String(v.Nombre).split(' ')[0] + ', te escribimos de JarabaRescata por tu inscripción como voluntario/a 🐾') : '';
+  abrirModal((v ? `
+  <h3 style="margin:0;color:#164B59"><i class="fa-solid fa-hands-holding-circle"></i> ${esc(v.Nombre)}</h3>
+  <p class="ayuda" style="margin-bottom:12px">Inscrito/a el ${fechaCorta(v.FechaRegistro)} · <span class="chip ${CHIP_VOL[v.Estado] || 'c-gris'}">${esc(v.Estado)}</span></p>
+  <div id="volFicha">
+  <table class="informe-tabla" style="margin-bottom:12px"><tbody>
+    <tr><td>Teléfono / WhatsApp</td><td>${esc(v.Telefono)}</td></tr>
+    <tr><td>Correo</td><td>${esc(v.Correo)}</td></tr>
+    <tr><td>Sector</td><td>${esc(v.Sector)}</td></tr>
+    <tr><td>Mayor de edad</td><td>${esc(v.MayorEdad)}</td></tr>
+    <tr><td>Quiere ayudar en</td><td>${esc(v.Areas)}</td></tr>
+    <tr><td>Días</td><td>${diasVol(v.Dias)}</td></tr>
+    <tr><td>Horario</td><td>${esc(v.Horario)}</td></tr>
+    <tr><td>Transporte</td><td>${esc(v.Transporte)}</td></tr>
+    ${v.Experiencia ? `<tr><td>Experiencia</td><td style="white-space:pre-line">${esc(v.Experiencia)}</td></tr>` : ''}
+  </tbody></table>
+  ${v.Motivo ? `<div style="background:#e2eef1;border-radius:12px;padding:10px 12px;margin-bottom:12px"><b style="color:#164B59">¿Por qué quiere ser voluntario/a?</b>
+    <p style="white-space:pre-line;margin-top:4px">${esc(v.Motivo)}</p></div>` : ''}
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+    <a class="btn btn-prim btn-mini" href="https://wa.me/${telWa(v.Telefono)}?text=${msg}" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>
+    <a class="btn btn-sec btn-mini" href="tel:${esc(String(v.Telefono).replace(/[^\d+]/g, ''))}"><i class="fa-solid fa-phone"></i> Llamar</a>
+    ${v.Correo ? `<a class="btn btn-sec btn-mini" href="mailto:${esc(v.Correo)}"><i class="fa-solid fa-envelope"></i> Correo</a>` : ''}
+    <button type="button" class="btn btn-sec btn-mini" onclick="$('volFicha').classList.add('oculto');$('volEditor').classList.remove('oculto');$('fM').editar.value='1'"><i class="fa-solid fa-pen"></i> Corregir datos</button>
+  </div>
+  </div>` : `<h3 style="margin:0 0 4px;color:#164B59"><i class="fa-solid fa-user-plus"></i> Agregar voluntario/a</h3>
+  <p class="ayuda" style="margin-bottom:12px">Para registrar a alguien que se unió en persona o por WhatsApp.</p>`) + `
+  <div class="error-form oculto" id="mErr"></div>
+  <form id="fM">
+    <input type="hidden" name="editar" value="${v ? '' : '1'}">
+    <div id="volEditor" class="${v ? 'oculto' : ''}">${editor}</div>
+    <div class="campo"><label>Estado</label><select name="Estado">${opts(ESTADOS_VOL, v ? v.Estado : 'Activo')}</select>
+      <p class="ayuda"><b>Nuevo</b>: aún no le escribes · <b>Contactado</b>: ya hablaron · <b>Activo</b>: ya está ayudando · <b>Inactivo</b>: ya no participa.</p></div>
+    <div class="campo"><label>Notas del equipo (internas)</label><textarea name="Notas" rows="3" placeholder="Ej.: Llamar el sábado. Puede recibir cachorros pequeños.">${esc(v ? v.Notas || '' : '')}</textarea></div>
+    <div class="pie">
+      ${v && admin ? `<button type="button" class="btn btn-peligro" style="margin-right:auto" onclick="eliminarVoluntario('${esc(v.ID)}')"><i class="fa-solid fa-trash"></i> Eliminar</button>` : ''}
+      <button type="button" class="btn btn-sec" onclick="cerrarModal()">Cerrar</button><button class="btn btn-prim"><i class="fa-solid fa-floppy-disk"></i> Guardar</button></div>
+  </form>`);
+  $('fM').onsubmit = async e => {
+    e.preventDefault();
+    const fd = new FormData(e.target), d = Object.fromEntries(fd);
+    d.areas = fd.getAll('areas'); d.dias = fd.getAll('dias'); d.horario = fd.getAll('horario');
+    d.editar = d.editar === '1';
+    if (v) d.ID = v.ID;
+    try { await accion('guardarVoluntario', d, v ? 'Voluntario actualizado' : 'Voluntario agregado'); cerrarModal(); mostrar(E.vista); } catch (err) { errModal(err.message); }
+  };
+}
+async function eliminarVoluntario(id) {
+  const v = (E.datos.voluntarios || []).find(x => x.ID === id); if (!v) return;
+  if (!confirm('¿Eliminar por completo los datos de ' + v.Nombre + '? Úsalo solo si la persona pidió que borremos sus datos. Si solo dejó de participar, mejor márcalo como Inactivo.')) return;
+  try { await accion('eliminarVoluntario', { ID: id }, 'Datos eliminados'); cerrarModal(); mostrar(E.vista); } catch (err) { errModal(err.message); }
 }
 
 // ===================== VISTA: PADRINOS =====================
@@ -1585,7 +1729,8 @@ function cResumen() {
     <div class="panel"><h2>Adopciones</h2>
       <span class="cnum">${adop.filter(a => ['Nueva', 'En entrevista', 'Aprobada'].indexOf(a.Estado) >= 0).length}</span><p class="ayuda">solicitudes en proceso</p>
       <p style="margin-top:10px;font-weight:700"><i class="fa-solid fa-house-chimney" style="color:var(--esmeralda)"></i> ${(n => n + (n === 1 ? ' perrito adoptado' : ' perritos adoptados'))((E.datos.perritos || []).filter(p => p.Estado === 'Adoptado').length)}</p>
-      <p class="ayuda" style="margin-top:6px">Donaciones únicas del mes: ${uni.length} (${rd(suma(uni))})</p></div>
+      <p class="ayuda" style="margin-top:6px">Donaciones únicas del mes: ${uni.length} (${rd(suma(uni))})</p>
+      <p class="ayuda" style="margin-top:6px"><i class="fa-solid fa-hands-holding-circle" style="color:#164B59"></i> Voluntarios activos: ${(E.datos.voluntarios || []).filter(v => v.Estado === 'Activo').length}</p></div>
   </div>
   <div class="rejilla2">
     <div class="panel"><h2>Entradas y salidas · últimos 6 meses</h2>${graficoSeisMeses(m)}</div>
@@ -1827,7 +1972,18 @@ const DEMO = (() => {
     { ID: 'AD-2', FechaRegistro: m + '-02 18:40', PerritoID: 'P-1', Perrito: 'Canela', Nombre: 'Pedro Almonte', Telefono: '829-555-9876', Correo: 'pedro@ejemplo.com', Sector: 'Buena Vista',
       Espacio: 'Sí', OtrasMascotas: 'No', CualesMascotas: '', Motivo: 'Vivo solo y quiero una compañera.', Horario: 'Noche (5:00 p. m. a 8:00 p. m.)', Estado: 'En entrevista', Notas: 'Se llamó el martes.' }
   ];
-  return { hoy: h, colaboradores, entradas, salidas, donaciones, perritos, apadrinamientos, adopciones, correos: [], bitacora: [{ Fecha: h + ' 08:00', Usuario: 'demo', Accion: 'Inicio de sesión', Detalle: '' }],
+  const voluntarios = [
+    { ID: 'VO-1', FechaRegistro: h + ' 09:10', Nombre: 'Laura Martínez', Telefono: '809-555-1234', Correo: 'laura@ejemplo.com', Sector: 'Pinar Quemado', MayorEdad: 'Sí',
+      Areas: 'Alimentar perritos en la calle, Hogar temporal, Medicar a los perritos', Dias: 'Miércoles, Sábado, Domingo', Horario: 'Mañana', Transporte: 'Motor',
+      Experiencia: 'Tengo 2 perritos y alimento a 3 de mi calle.', Motivo: 'Quiero ayudar de forma organizada a los perritos de mi sector.', Estado: 'Nuevo', Notas: '' },
+    { ID: 'VO-2', FechaRegistro: m + '-03 17:25', Nombre: 'José Ramírez', Telefono: '829-555-4321', Correo: 'jose@ejemplo.com', Sector: 'El Carmen', MayorEdad: 'Sí',
+      Areas: 'Llevarlos al veterinario, Jornadas de esterilización y vacunas', Dias: 'Sábado', Horario: 'Mañana, Tarde', Transporte: 'Carro',
+      Experiencia: '', Motivo: 'Tengo carro y los sábados libres, puedo trasladar perritos.', Estado: 'Contactado', Notas: 'Disponible desde el próximo sábado.' },
+    { ID: 'VO-3', FechaRegistro: p + '-15 11:00', Nombre: 'Pedro Díaz', Telefono: '849-555-7777', Correo: 'pedro.d@ejemplo.com', Sector: 'Centro', MayorEdad: 'Sí',
+      Areas: 'Gestionar adopciones, Otra: Transporte de alimento', Dias: 'Lunes, Martes, Viernes', Horario: 'Noche', Transporte: 'No tengo',
+      Experiencia: 'Voluntario en otra fundación.', Motivo: 'Me encantan los perros.', Estado: 'Activo', Notas: '' }
+  ];
+  return { hoy: h, colaboradores, entradas, salidas, donaciones, perritos, apadrinamientos, adopciones, voluntarios, correos: [], bitacora: [{ Fecha: h + ' 08:00', Usuario: 'demo', Accion: 'Inicio de sesión', Detalle: '' }],
     usuarios: [{ usuario: 'juana', nombre: 'Juana Paulino', rol: 'Administrador', estado: 'Activo', fecha: p + '-01' }] };
 })();
 
@@ -1841,7 +1997,8 @@ function limpiarConsultaDemo(D, ses) {
     apadrinamientos: t(D.apadrinamientos, ['ID', 'FechaRegistro', 'PerritoID', 'Perrito', 'Modalidad', 'Monto', 'DiaDeposito', 'Estado']),
     donaciones: t(D.donaciones, ['ID', 'FechaRegistro', 'Monto', 'Estado']),
     perritos: t(D.perritos, ['ID', 'FechaRegistro', 'Nombre', 'Sexo', 'Edad', 'Tamano', 'Historia', 'Enlace', 'Foto1', 'Foto2', 'Estado', 'Visible']),
-    adopciones: t(D.adopciones, ['ID', 'FechaRegistro', 'PerritoID', 'Estado']) };
+    adopciones: t(D.adopciones, ['ID', 'FechaRegistro', 'PerritoID', 'Estado']),
+    voluntarios: t(D.voluntarios, ['ID', 'FechaRegistro', 'Areas', 'Estado']) };
 }
 
 async function demoApi(action, d) {
@@ -1850,7 +2007,7 @@ async function demoApi(action, d) {
   if (action === 'login') DEMO._consulta = /^consulta/i.test(d.usuario || '');
   const ses = DEMO._consulta ? { usuario: 'consulta', nombre: 'Usuario de consulta (demo)', rol: 'Consulta' } : { usuario: 'juana', nombre: 'Juana Paulino (demo)', rol: 'Administrador' };
   if (DEMO._consulta && ['logout', 'datos', 'fotoPerrito', 'cambiarMiClave', 'login', 'estado'].indexOf(action) < 0) return { ok: false, error: 'Tu usuario es de solo consulta: no puede registrar ni modificar información.' };
-  const todo = (aviso) => DEMO._consulta ? limpiarConsultaDemo(D, ses) : ({ ok: true, sesion: ses, hoy: D.hoy, colaboradores: D.colaboradores, entradas: D.entradas, salidas: D.salidas, bitacora: D.bitacora, correos: D.correos, donaciones: D.donaciones, perritos: D.perritos, apadrinamientos: D.apadrinamientos, adopciones: D.adopciones, remitente: 'juana107@gmail.com', aviso });
+  const todo = (aviso) => DEMO._consulta ? limpiarConsultaDemo(D, ses) : ({ ok: true, sesion: ses, hoy: D.hoy, colaboradores: D.colaboradores, entradas: D.entradas, salidas: D.salidas, bitacora: D.bitacora, correos: D.correos, donaciones: D.donaciones, perritos: D.perritos, apadrinamientos: D.apadrinamientos, adopciones: D.adopciones, voluntarios: D.voluntarios, remitente: 'juana107@gmail.com', aviso });
   const ahora = D.hoy + ' ' + new Date().toTimeString().slice(0, 5);
   const id = p => p + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();
   switch (action) {
@@ -1877,6 +2034,15 @@ async function demoApi(action, d) {
       if ((c || ap) && d.enviarGracias === 'on') { const q = c || ap; D.correos.push({ Fecha: ahora, Tipo: 'Agradecimiento', ColaboradorID: q.ID, MesAporte: d.MesAporte }); return todo('Entrada registrada y agradecimiento enviado a ' + q.Correo + ' (demo)'); }
       return todo();
     }
+    case 'guardarVoluntario': {
+      const j = l => (Array.isArray(l) ? l : []).join(', ');
+      const campos = d.editar ? { Nombre: d.nombre, Telefono: d.telefono, Correo: d.correo, Sector: d.sector, MayorEdad: d.mayorEdad, Areas: j((d.areas || []).map(a => a === 'Otra' && d.otraArea ? 'Otra: ' + d.otraArea : a)), Dias: j(d.dias), Horario: j(d.horario), Transporte: d.transporte, Experiencia: d.experiencia, Motivo: d.motivo } : {};
+      if (d.editar && String(d.nombre || '').trim().length < 5) return { ok: false, error: 'Escribe el nombre completo.' };
+      if (d.ID) Object.assign(D.voluntarios.find(x => x.ID === d.ID), campos, { Estado: d.Estado, Notas: d.Notas });
+      else D.voluntarios.push({ ...campos, ID: id('VO'), FechaRegistro: ahora, Estado: d.Estado, Notas: d.Notas });
+      return todo();
+    }
+    case 'eliminarVoluntario': D.voluntarios = D.voluntarios.filter(x => x.ID !== d.ID); return todo();
     case 'guardarAdopcion': {
       const a = D.adopciones.find(x => x.ID === d.ID); const antes = a.Estado;
       Object.assign(a, { Estado: d.Estado, Notas: d.Notas });
