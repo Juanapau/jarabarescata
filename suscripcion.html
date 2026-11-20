@@ -80,6 +80,20 @@
   .opcion.apadrina b{color:#17766f}
   .opcion.adopta .ico{background:var(--esmeralda-osc)}
   .opcion.adopta b{color:var(--esmeralda-osc)}
+  .opcion.voluntario{border-color:#164B59;background:#eef5f7}
+  .opcion.voluntario .ico{background:#164B59}
+  .opcion.voluntario b{color:#164B59}
+  .boton.petroleo{background:#164B59;box-shadow:0 6px 0 #0c303a}
+  .marcas{display:flex;flex-wrap:wrap;gap:8px}
+  .marcas label{display:inline-flex;align-items:center;gap:8px;border:2px solid var(--borde);border-radius:12px;padding:9px 12px;font-weight:700;font-size:.95rem;background:#fffdf8;cursor:pointer;margin:0;color:var(--tinta)}
+  .marcas label i{color:#164B59}
+  .marcas input{width:18px;height:18px;padding:0;accent-color:#164B59;flex:none}
+  .marcas label:has(input:checked){border-color:#164B59;background:#e2eef1}
+  .marcas.dias label{min-width:58px;justify-content:center}
+  .exito .icono.petroleo{background:#164B59}
+  #formVol .opciones-si-no input{accent-color:#164B59}
+  #formVol .opciones-si-no label:has(input:checked){border-color:#164B59;background:#e2eef1}
+  #formVol .acepta input{accent-color:#164B59}
   /* ---------- Adopta un perrito ---------- */
   .ubic{font-size:.9rem;font-weight:700;color:var(--tinta);margin:-2px 0 12px;display:flex;gap:6px;align-items:flex-start}
   .ubic i{color:var(--naranja);margin-top:3px}
@@ -251,7 +265,7 @@
     <div class="alerta" id="alerta"></div>
 
     <section id="eleccion">
-      <p class="elige">¿Cómo quieres aportar?</p>
+      <p class="elige">¿Cómo quieres ayudar?</p>
       <div class="opciones">
         <button type="button" class="opcion mensual" onclick="mostrarVista('mensual')">
           <span class="ico"><i class="fa-solid fa-paw"></i></span>
@@ -271,6 +285,11 @@
         <button type="button" class="opcion adopta" onclick="mostrarVista('adoptar')">
           <span class="ico"><i class="fa-solid fa-house-chimney"></i></span>
           <span><b>Adopta un perrito</b><small>Conoce a los perritos que buscan un hogar para siempre.</small></span>
+          <i class="fa-solid fa-chevron-right flecha"></i>
+        </button>
+        <button type="button" class="opcion voluntario" onclick="mostrarVista('voluntario')">
+          <span class="ico"><i class="fa-solid fa-hands-holding-circle"></i></span>
+          <span><b>Hazte voluntario/a</b><small>Ayuda con tu tiempo: alimentar, medicar, trasladar o dar hogar temporal.</small></span>
           <i class="fa-solid fa-chevron-right flecha"></i>
         </button>
       </div>
@@ -375,6 +394,82 @@
       <img class="exfoto" id="adFoto" alt="">
       <h2 id="adTitulo"></h2>
       <p id="adTexto"></p>
+      <div class="aviso-spam" style="margin-top:16px">
+        <i class="fa-solid fa-envelope-circle-check"></i>
+        <div>Te enviamos una confirmación a tu correo. Si no la ves, revisa tu carpeta de <b>Spam</b> o <b>Promociones</b>.</div>
+      </div>
+    </section>
+
+    <form id="formVol" novalidate style="display:none">
+      <button type="button" class="volver" onclick="volverInicio()"><i class="fa-solid fa-arrow-left"></i> Volver</button>
+      <div class="campo">
+        <label for="voNombre"><i class="fa-solid fa-user"></i> Nombre completo</label>
+        <input id="voNombre" autocomplete="name" placeholder="Ej.: María Rodríguez Peña" maxlength="120">
+      </div>
+      <div class="campo">
+        <label for="voTel"><i class="fa-brands fa-whatsapp"></i> Teléfono o WhatsApp</label>
+        <input id="voTel" type="tel" inputmode="tel" autocomplete="tel" placeholder="Ej.: 809-555-1234" maxlength="30">
+      </div>
+      <div class="campo">
+        <label for="voCorreo"><i class="fa-solid fa-envelope"></i> Correo electrónico</label>
+        <input id="voCorreo" type="email" autocomplete="email" placeholder="tucorreo@ejemplo.com" maxlength="120">
+      </div>
+      <div class="campo">
+        <label for="voSector"><i class="fa-solid fa-location-dot"></i> Sector donde vives</label>
+        <input id="voSector" placeholder="Ej.: Pinar Quemado, Jarabacoa" maxlength="120">
+      </div>
+      <div class="campo">
+        <label><i class="fa-solid fa-id-card"></i> ¿Eres mayor de edad?</label>
+        <div class="opciones-si-no"><label><input type="radio" name="voMayor" value="Sí"> Sí</label><label><input type="radio" name="voMayor" value="No"> No</label></div>
+      </div>
+      <div class="campo">
+        <label><i class="fa-solid fa-hand-holding-heart"></i> ¿En qué te gustaría ayudar? <small style="font-weight:600;color:var(--suave)">(puedes marcar varias)</small></label>
+        <div class="marcas" id="voAreas">
+          <label><input type="checkbox" value="Alimentar perritos en la calle"> <i class="fa-solid fa-bowl-food"></i> Alimentar perritos en la calle</label>
+          <label><input type="checkbox" value="Llevarlos al veterinario"> <i class="fa-solid fa-car-side"></i> Llevarlos al veterinario</label>
+          <label><input type="checkbox" value="Hogar temporal"> <i class="fa-solid fa-house-chimney-user"></i> Hogar temporal</label>
+          <label><input type="checkbox" value="Jornadas de esterilización y vacunas"> <i class="fa-solid fa-syringe"></i> Jornadas de esterilización y vacunas</label>
+          <label><input type="checkbox" value="Medicar a los perritos"> <i class="fa-solid fa-pills"></i> Medicar a los perritos</label>
+          <label><input type="checkbox" value="Gestionar adopciones"> <i class="fa-solid fa-handshake"></i> Gestionar adopciones</label>
+          <label><input type="checkbox" value="Gestionar hogares temporales"> <i class="fa-solid fa-people-roof"></i> Gestionar hogares temporales</label>
+          <label><input type="checkbox" value="Otra" id="voOtraChk"> <i class="fa-solid fa-ellipsis"></i> Otra</label>
+        </div>
+        <input id="voOtra" style="display:none;margin-top:8px" placeholder="¿En qué otra forma te gustaría ayudar?" maxlength="120">
+      </div>
+      <div class="campo">
+        <label><i class="fa-solid fa-calendar-days"></i> ¿Qué días puedes ayudar?</label>
+        <div class="marcas dias" id="voDias">
+          <label><input type="checkbox" value="Lunes"> Lun</label><label><input type="checkbox" value="Martes"> Mar</label><label><input type="checkbox" value="Miércoles"> Mié</label>
+          <label><input type="checkbox" value="Jueves"> Jue</label><label><input type="checkbox" value="Viernes"> Vie</label><label><input type="checkbox" value="Sábado"> Sáb</label><label><input type="checkbox" value="Domingo"> Dom</label>
+        </div>
+      </div>
+      <div class="campo">
+        <label><i class="fa-solid fa-clock"></i> ¿En qué horario? <small style="font-weight:600;color:var(--suave)">(puedes marcar varios)</small></label>
+        <div class="marcas" id="voHorario">
+          <label><input type="checkbox" value="Mañana"> Mañana</label><label><input type="checkbox" value="Tarde"> Tarde</label><label><input type="checkbox" value="Noche"> Noche</label>
+        </div>
+      </div>
+      <div class="campo">
+        <label><i class="fa-solid fa-motorcycle"></i> ¿Tienes cómo moverte?</label>
+        <div class="opciones-si-no"><label><input type="radio" name="voTransporte" value="Carro"> Carro</label><label><input type="radio" name="voTransporte" value="Motor"> Motor</label><label><input type="radio" name="voTransporte" value="No tengo"> No tengo</label></div>
+        <p class="ayuda">Nos ayuda a saber quién puede trasladar perritos al veterinario.</p>
+      </div>
+      <div class="campo">
+        <label for="voExp"><i class="fa-solid fa-dog"></i> ¿Tienes experiencia con perros? <small style="font-weight:600;color:var(--suave)">(opcional)</small></label>
+        <textarea id="voExp" maxlength="600" placeholder="Ej.: tengo 2 perritos, he dado de comer a los de mi calle…"></textarea>
+      </div>
+      <div class="campo">
+        <label for="voMotivo"><i class="fa-solid fa-heart"></i> ¿Por qué quieres ser voluntario/a?</label>
+        <textarea id="voMotivo" maxlength="1000" placeholder="Cuéntanos en pocas palabras"></textarea>
+      </div>
+      <label class="acepta"><input type="checkbox" id="aceptaVo"> <span>Acepto que JarabaRescata use mis datos para gestionar mi aporte o solicitud, según la <a href="privacidad.html" class="ver-privacidad">política de privacidad</a>.</span></label>
+      <button class="boton petroleo" type="submit" id="enviarVo"><i class="fa-solid fa-hand"></i> Enviar mi inscripción</button>
+    </form>
+
+    <section class="exito" id="exitoVol" style="display:none" aria-live="polite">
+      <div class="icono petroleo"><i class="fa-solid fa-hands-holding-circle"></i></div>
+      <h2 id="voTitulo"></h2>
+      <p id="voTexto"></p>
       <div class="aviso-spam" style="margin-top:16px">
         <i class="fa-solid fa-envelope-circle-check"></i>
         <div>Te enviamos una confirmación a tu correo. Si no la ves, revisa tu carpeta de <b>Spam</b> o <b>Promociones</b>.</div>
@@ -559,7 +654,8 @@ const TEXTOS = {
   mensual:  ['Únete al <span>Círculo de Patitas</span>', 'Con un aporte mensual nos ayudas a alimentar, vacunar, esterilizar y atender a los perritos de la calle. Cada caso lo verás en nuestras redes.'],
   unica:    ['Haz una <span>donación única</span>', 'Un solo aporte, cuando quieras. Tu donación se usa para alimentar, vacunar, esterilizar y atender a los perritos de la calle.'],
   apadrinar:['Apadrina un <span>perrito</span>', 'Elige a un perrito y cúbrele el alimento, la atención veterinaria o ambos, cada mes. Te contaremos cómo va en nuestras redes.'],
-  adoptar:  ['Adopta un <span>perrito</span>', 'Estos perritos buscan un hogar para siempre. Escríbenos por WhatsApp o Instagram para conocerles.']
+  adoptar:  ['Adopta un <span>perrito</span>', 'Estos perritos buscan un hogar para siempre. Escríbenos por WhatsApp o Instagram para conocerles.'],
+  voluntario:['Hazte <span style="color:#164B59">voluntario/a</span>', 'Cuéntanos un poco de ti y en qué te gustaría ayudar. Te contactaremos para conocernos y coordinar.']
 };
 // Si la persona llegó desde la página pública (jarabarescata.com), "Volver" la regresa allí;
 // si no, la regresa a los botones de elección de este formulario.
@@ -576,6 +672,7 @@ function mostrarVista(v) {
   $('formUnica').style.display = v === 'unica' ? 'block' : 'none';
   $('vApadrinar').style.display = v === 'apadrinar' ? 'block' : 'none';
   $('vAdoptar').style.display = v === 'adoptar' ? 'block' : 'none';
+  $('formVol').style.display = v === 'voluntario' ? 'block' : 'none'; $('exitoVol').style.display = 'none';
   $('formApad').style.display = 'none'; $('formAdop').style.display = 'none'; $('exitoAdop').style.display = 'none';
   document.body.classList.toggle('ancho', v === 'apadrinar' || v === 'adoptar');
   if (v === 'apadrinar') cargarCatalogo();
@@ -1089,7 +1186,7 @@ $('formulario').addEventListener('submit', async e => {
 });
 
 function mostrarExito(d, dep, tipo = 'mensual'){
-  ['eleccion', 'formulario', 'formUnica', 'vApadrinar', 'vAdoptar', 'formApad', 'formAdop'].forEach(id => $(id).style.display = 'none');
+  ['eleccion', 'formulario', 'formUnica', 'vApadrinar', 'vAdoptar', 'formApad', 'formAdop', 'formVol'].forEach(id => $(id).style.display = 'none');
   document.body.classList.remove('ancho');
   const primer = (d.nombre || '').split(' ')[0];
   $('exTitulo').textContent = primer ? '¡Gracias, ' + primer + '!' : '¡Gracias por tu donación!';
@@ -1144,9 +1241,61 @@ function mostrarExito(d, dep, tipo = 'mensual'){
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// Enlaces directos: ?tipo=mensual, ?tipo=unica, ?tipo=apadrinar y ?tipo=apadrinar&perrito=ID
+// ---------- Voluntarios ----------
+const marcados = id => [...document.querySelectorAll('#' + id + ' input:checked')].map(i => i.value);
+$('voOtraChk').addEventListener('change', e => { $('voOtra').style.display = e.target.checked ? 'block' : 'none'; if (e.target.checked) $('voOtra').focus(); });
+$('formVol').addEventListener('submit', async e => {
+  e.preventDefault();
+  $('alerta').classList.remove('ver');
+  const radio = n => { const r = document.querySelector('input[name="' + n + '"]:checked'); return r ? r.value : ''; };
+  const d = {
+    nombre: $('voNombre').value.trim().replace(/\s+/g, ' '),
+    telefono: $('voTel').value.trim(),
+    correo: $('voCorreo').value.trim().toLowerCase(),
+    sector: $('voSector').value.trim(),
+    mayorEdad: radio('voMayor'),
+    areas: marcados('voAreas'), otraArea: $('voOtra').value.trim(),
+    dias: marcados('voDias'), horario: marcados('voHorario'),
+    transporte: radio('voTransporte'),
+    experiencia: $('voExp').value.trim(), motivo: $('voMotivo').value.trim()
+  };
+  if (d.nombre.split(' ').length < 2) return mostrarError('Escribe tu nombre completo (nombre y apellido).');
+  if (d.telefono.replace(/\D/g, '').length < 10) return mostrarError('Escribe un teléfono o WhatsApp válido (10 dígitos).');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.correo)) return mostrarError('Revisa tu correo electrónico.');
+  if (d.sector.length < 3) return mostrarError('Indica el sector donde vives.');
+  if (!d.mayorEdad) return mostrarError('Indica si eres mayor de edad.');
+  if (!d.areas.length) return mostrarError('Elige al menos una forma en que te gustaría ayudar.');
+  if (d.areas.indexOf('Otra') >= 0 && d.otraArea.length < 3) return mostrarError('Cuéntanos en qué otra forma te gustaría ayudar.');
+  if (!d.dias.length) return mostrarError('Elige al menos un día en que puedes ayudar.');
+  if (!d.horario.length) return mostrarError('Elige al menos un horario.');
+  if (!d.transporte) return mostrarError('Indica si tienes cómo moverte.');
+  if (d.motivo.length < 10) return mostrarError('Cuéntanos por qué quieres ser voluntario/a.');
+  if (!$('aceptaVo').checked) return mostrarError('Para continuar, marca la casilla de aceptación de la política de privacidad.');
+  const btn = $('enviarVo');
+  btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
+  try {
+    let r;
+    if (API_URL) {
+      const resp = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'inscribirVoluntario', data: d }) });
+      r = await resp.json();
+    } else { await new Promise(ok => setTimeout(ok, 700)); r = { ok: true }; }
+    if (!r.ok) throw new Error(r.error || 'No se pudo enviar la inscripción.');
+    $('formVol').style.display = 'none';
+    $('voTitulo').textContent = '¡Gracias, ' + d.nombre.split(' ')[0] + '!';
+    $('voTexto').textContent = 'Recibimos tu inscripción como voluntario/a. Te escribiremos al ' + d.telefono + ' para conocernos y coordinar cómo puedes ayudar. 🐾';
+    $('exitoVol').style.display = 'block';
+    $('formVol').reset(); $('voOtra').style.display = 'none';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch (err) {
+    mostrarError(err.message === 'Failed to fetch' ? 'No hay conexión. Inténtalo de nuevo.' : err.message);
+  } finally {
+    btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-hand"></i> Enviar mi inscripción';
+  }
+});
+
+// Enlaces directos: ?tipo=mensual, ?tipo=unica, ?tipo=apadrinar, ?tipo=adoptar, ?tipo=voluntario y ?tipo=apadrinar&perrito=ID
 // (va al final para que todo lo anterior ya esté cargado)
-(() => { let t = ''; try { t = new URLSearchParams(location.search).get('tipo'); } catch (e) {} if (['mensual', 'unica', 'apadrinar', 'adoptar'].indexOf(t) >= 0) mostrarVista(t); })();
+(() => { let t = ''; try { t = new URLSearchParams(location.search).get('tipo'); } catch (e) {} if (['mensual', 'unica', 'apadrinar', 'adoptar', 'voluntario'].indexOf(t) >= 0) mostrarVista(t); })();
 </script>
 <div class="priv-capa" id="privCapa" role="dialog" aria-modal="true" aria-label="Política de privacidad">
   <div class="priv-caja">
