@@ -138,11 +138,22 @@ footer b{font-family:'Baloo 2';font-size:1.3rem;color:#fff;display:block}
 .vacio-hogar{text-align:center;color:var(--suave);max-width:520px;margin:0 auto}
 .vacio-hogar a{color:var(--esmeralda);font-weight:800}
 .cargando-txt{opacity:.6}
+/* Franja de voluntarios */
+.voluntario-banda{margin-top:18px;border-radius:22px;padding:22px 24px;display:flex;align-items:center;gap:20px;background:linear-gradient(120deg,#e2eef1,#fff 72%);border:2px solid #164B59;text-decoration:none;color:inherit;transition:transform .15s,box-shadow .15s}
+.voluntario-banda:hover{transform:translateY(-3px);box-shadow:0 14px 30px rgba(22,75,89,.16)}
+.voluntario-banda:active{transform:scale(.99)}
+.voluntario-banda:focus-visible{outline:3px solid var(--turquesa);outline-offset:3px}
+.voluntario-banda .ico{width:66px;height:66px;flex:none;border-radius:18px;background:#164B59;color:#fff;display:grid;place-items:center;font-size:1.8rem}
+.voluntario-banda h3{font-family:'Baloo 2',sans-serif;font-size:1.45rem;color:#164B59;line-height:1.15;margin-bottom:4px}
+.voluntario-banda p{color:var(--suave);margin:0}
+.btn-vol{margin-left:auto;flex:none;display:inline-flex;align-items:center;gap:8px;background:#164B59;color:#fff;border-radius:14px;padding:12px 20px;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:1.05rem;box-shadow:0 4px 0 #0c303a}
 @media (max-width:900px){
   .q-cols{grid-template-columns:1fr}
   .ayudar{grid-template-columns:1fr 1fr}
 }
 @media (max-width:760px){
+  .voluntario-banda{flex-direction:column;align-items:flex-start;padding:20px 18px;gap:12px}
+  .btn-vol{margin-left:0;width:100%;justify-content:center}
   .logros{gap:8px}.logros div{flex:1;min-width:0;padding:8px 10px;text-align:center}.logros b{font-size:1.4rem}
   header .cont{height:64px;position:relative}
   .menu-btn{display:grid;place-items:center}
@@ -258,6 +269,14 @@ footer b{font-family:'Baloo 2';font-size:1.3rem;color:#fff;display:block}
         <h3 style="color:var(--esmeralda-osc)">Adopta un perrito</h3><p>Conoce a los perritos que buscan un hogar para siempre.</p>
         <span class="ir" style="color:var(--esmeralda-osc)">Conocerlos <i class="fa-solid fa-arrow-right"></i></span></a>
     </div>
+    <a class="voluntario-banda" href="suscripcion.html?tipo=voluntario&desde=web">
+      <div class="ico"><i class="fa-solid fa-hands-holding-circle"></i></div>
+      <div class="txt-vol">
+        <h3>¿Prefieres ayudar con tu tiempo? Hazte voluntario/a</h3>
+        <p>Alimentar y medicar perritos en tu sector, llevarlos al veterinario, darles hogar temporal, ayudar en jornadas o gestionar adopciones. Tú eliges cómo y cuándo.</p>
+      </div>
+      <span class="btn-vol"><i class="fa-solid fa-hand"></i> Quiero ser voluntario/a</span>
+    </a>
   </div>
 </section>
 
