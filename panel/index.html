@@ -1220,7 +1220,10 @@ function modalFicha(id) {
       <b style="color:var(--esmeralda)">Cuentas de ${esc(p.Nombre)}</b> <span class="ayuda">(todo su historial)</span>
       <div class="cuentas"><div><small>Aportes de padrinos</small><b style="color:var(--esmeralda)">${rd(c.totalAportes)}</b></div>
         <div><small>Invertido en ${p.Sexo === 'Hembra' ? 'ella' : 'él'}</small><b style="color:var(--naranja-osc)">${rd(c.totalGastos)}</b></div>
-        <div><small>Diferencia</small><b>${rd(c.totalAportes - c.totalGastos)}</b></div></div></div>`; })()}
+        <div><small>Diferencia</small><b>${rd(c.totalAportes - c.totalGastos)}</b></div></div>
+      ${c.gastos.length ? `<details style="margin-top:8px"><summary style="cursor:pointer;font-weight:800;color:var(--naranja-osc)">Ver los ${c.gastos.length} gasto(s)</summary>
+        <table class="informe-tabla" style="margin-top:6px"><tbody>${c.gastos.slice().reverse().map(g => `<tr><td>${fechaCorta(g.Fecha)}<br><span class="ayuda">${esc(g.Categoria)}</span></td><td>${esc(g.Descripcion)}</td><td style="white-space:nowrap">${rd(g.Monto)}</td></tr>`).join('')}</tbody></table></details>` : ''}
+      ${esConsulta() ? '' : `<button type="button" class="btn btn-nar btn-mini" style="margin-top:10px" onclick="modalSalida({ perritos: ['${esc(p.ID)}'] })"><i class="fa-solid fa-plus"></i> Registrar gasto para ${esc(p.Nombre)}</button>`}</div>`; })()}
     ${p.Enlace ? `<p style="margin-top:8px"><a class="enlace" href="${esc(p.Enlace)}" target="_blank" rel="noopener"><i class="fa-solid fa-video"></i> Ver su video</a></p>` : ''}
     <div class="pie"><button type="button" class="btn btn-sec" onclick="cerrarModal()">Cerrar</button>
       <button type="button" class="btn btn-nar" onclick="modalInformePerrito('${esc(p.ID)}')"><i class="fa-solid fa-file-pdf"></i> Informe del ahijado</button>
@@ -1583,7 +1586,7 @@ function modalEntrada(pre = {}) {
   $('fM').onsubmit = e => enviarMovimiento(e, 'registrarEntrada', 'Entrada registrada');
 }
 
-function modalSalida() {
+function modalSalida(pre = {}) {
   const hoy = E.datos.hoy || hoyLocal();
   const fechaDef = hoy.slice(0, 7) === E.mes ? hoy : (E.mes < hoy.slice(0, 7) ? finDeMes(E.mes) : E.mes + '-01');
   abrirModal(`<h3>Registrar salida</h3>
@@ -1595,7 +1598,7 @@ function modalSalida() {
     <div class="campo col2"><label>Proveedor</label><input name="Proveedor" placeholder="Ej.: Clínica Veterinaria San Francisco"></div>
     <div class="campo"><label>Monto (RD$)</label><input type="number" name="Monto" min="1" step="0.01" required></div>
     <div class="campo"><label>Pagado con</label><select name="Metodo">${opts(METODOS, 'Efectivo')}</select></div>
-    <div class="campo col2"><label>¿Para qué perrito(s)? (opcional)</label>${listaPerritosCheck([])}
+    <div class="campo col2"><label>¿Para qué perrito(s)? (opcional)</label>${listaPerritosCheck(pre.perritos || [])}
       <p class="ayuda">Marca uno o varios: el gasto aparecerá en sus cuentas y en el informe para sus padrinos. Si marcas varios, se reparte en partes iguales.</p></div>
     ${campoArchivo('Factura o recibo')}
     <div class="campo col2"><label>Número de factura o recibo (si no tienes foto)</label><input name="NumFactura" maxlength="40" placeholder="Ej.: B0100001234"></div>
@@ -1679,7 +1682,8 @@ function vInformes() {
   $('vista').innerHTML = `
   <div class="panel">
     <h2>Informe de transparencia · ${nombreMes(m)}
-      <button class="btn btn-nar" onclick="pdfInforme()"><i class="fa-solid fa-file-arrow-down"></i> Descargar PDF</button></h2>
+      <span style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-nar" onclick="pdfInforme()"><i class="fa-solid fa-file-arrow-down"></i> Descargar PDF</button>
+      <button class="btn btn-prim" onclick="modalEnviarInforme()"><i class="fa-solid fa-paper-plane"></i> Enviar por correo</button></span></h2>
     <p class="ayuda" style="margin-bottom:14px">Este informe es para compartir con los colaboradores. Muestra totales y en qué se invirtió el dinero; <b>no incluye nombres ni montos individuales de los donantes</b>.</p>
     <div class="rejilla2">
       <div><h3 style="color:var(--turquesa);margin-bottom:6px">Balance</h3>
@@ -1850,8 +1854,61 @@ function cFicha(id) {
       <button type="button" class="btn btn-nar" onclick="bajarInformePerrito('${esc(p.ID)}', null)"><i class="fa-solid fa-file-pdf"></i> Informe del ahijado</button></div>`);
 }
 
-function pdfInforme() {
-  if (!window.jspdf) return toast('No se pudo cargar el generador de PDF. Revisa tu conexión.');
+// Enviar el informe mensual por correo a las personas registradas (cada correo una sola vez)
+function destinatariosInforme() {
+  const m = {};
+  const add = (correo, nombre, tipo) => {
+    const c = String(correo || '').trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c)) return;
+    if (!m[c]) m[c] = { correo: c, nombre, tipos: [] };
+    if (m[c].tipos.indexOf(tipo) < 0) m[c].tipos.push(tipo);
+  };
+  (E.datos.colaboradores || []).filter(c => c.Estado === 'Activo' || c.Estado === 'Pausado').forEach(c => add(c.Correo, c.Nombre, 'Círculo'));
+  (E.datos.apadrinamientos || []).filter(a => a.Estado !== 'Finalizado').forEach(a => add(a.Correo, a.Nombre, 'Padrino'));
+  (E.datos.donaciones || []).filter(x => x.Estado === 'Recibida').forEach(x => add(x.Correo, x.Nombre, 'Donante'));
+  return Object.values(m).sort((a, b) => String(a.nombre).localeCompare(String(b.nombre)));
+}
+function modalEnviarInforme() {
+  const m = E.mes, lista = destinatariosInforme();
+  const ya = new Set((E.datos.correos || []).filter(c => c.Tipo === 'Informe mensual' && c.MesAporte === m).map(c => String(c.Correo).toLowerCase()));
+  const CHIP_T = { 'Círculo': 'c-verde', 'Padrino': 'c-turq', 'Donante': 'c-nar' };
+  abrirModal(`<h3><i class="fa-solid fa-paper-plane"></i> Enviar informe de ${nombreMes(m)}</h3>
+  <p class="ayuda" style="margin-bottom:10px">Les llegará por correo el mismo PDF de <b>Descargar PDF</b>, con un mensaje de agradecimiento. Cada persona lo recibe una sola vez aunque esté en varias listas.</p>
+  <div class="error-form oculto" id="mErr"></div>
+  ${lista.length ? `
+  <div class="lista-perros-cab"><span class="ayuda" id="iNum"></span>
+    <span style="display:flex;gap:6px"><button type="button" class="btn btn-sec btn-mini" id="iTodos">Todos</button><button type="button" class="btn btn-sec btn-mini" id="iNinguno">Ninguno</button></span></div>
+  <div class="lista-perros" id="iLista" style="max-height:320px">
+    ${lista.map(x => `<label><input type="checkbox" class="iDest" value="${esc(x.correo)}" ${ya.has(x.correo) ? '' : 'checked'}>
+      <span style="flex:1;min-width:0"><b>${esc(x.nombre)}</b><br><small style="word-break:break-all">${esc(x.correo)}</small></span>
+      <span style="display:flex;gap:3px;flex-wrap:wrap;justify-content:flex-end">${x.tipos.map(t => `<span class="chip ${CHIP_T[t]}">${t}</span>`).join('')}${ya.has(x.correo) ? '<span class="chip c-gris">Ya enviado</span>' : ''}</span></label>`).join('')}
+  </div>
+  ${ya.size ? `<p class="ayuda" style="margin-top:6px">Las personas marcadas como <b>Ya enviado</b> recibieron el informe de este mes; quedaron sin marcar para no repetirlo.</p>` : ''}
+  <div class="pie"><button type="button" class="btn btn-sec" onclick="cerrarModal()">Cancelar</button><button type="button" class="btn btn-prim" id="iEnviarMes"><i class="fa-solid fa-paper-plane"></i> Enviar</button></div>`
+  : `<div class="vacio"><i class="fa-solid fa-envelope"></i>No hay personas con correo registrado para enviar el informe.</div>
+  <div class="pie"><button type="button" class="btn btn-sec" onclick="cerrarModal()">Cerrar</button></div>`}`);
+  if (!lista.length) return;
+  const contar = () => { const n = document.querySelectorAll('.iDest:checked').length; $('iNum').textContent = n + ' de ' + lista.length + ' seleccionada(s)'; $('iEnviarMes').innerHTML = '<i class="fa-solid fa-paper-plane"></i> Enviar a ' + n; };
+  $('iLista').onchange = contar; contar();
+  $('iTodos').onclick = () => { document.querySelectorAll('.iDest').forEach(i => i.checked = true); contar(); };
+  $('iNinguno').onclick = () => { document.querySelectorAll('.iDest').forEach(i => i.checked = false); contar(); };
+  $('iEnviarMes').onclick = async () => {
+    const correos = [...document.querySelectorAll('.iDest:checked')].map(i => i.value);
+    if (!correos.length) return errModal('Elige al menos una persona.');
+    if (!confirm('¿Enviar el informe de ' + nombreMes(m) + ' a ' + correos.length + ' persona(s)?')) return;
+    try {
+      cargando(true);
+      const doc = pdfInforme(true);
+      const pdf = doc.output('datauristring').split(',')[1];
+      cargando(false);
+      await accion('enviarInformeMensual', { mes: m, correos, pdf });
+      cerrarModal(); mostrar(E.vista);
+    } catch (err) { cargando(false); errModal(err.message); }
+  };
+}
+
+function pdfInforme(soloDoc = false) {
+  if (!window.jspdf) { if (soloDoc) throw new Error('No se pudo cargar el generador de PDF. Revisa tu conexión.'); return toast('No se pudo cargar el generador de PDF. Revisa tu conexión.'); }
   const m = E.mes, d = datosInforme(m);
   const { jsPDF } = window.jspdf, doc = new jsPDF({ unit: 'mm', format: 'letter' });
   const W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight();
@@ -1900,6 +1957,7 @@ function pdfInforme() {
     doc.text('Instagram @jarabarescata · Gracias por ser parte del Círculo de Patitas', 14, H - 10);
     doc.text('Página ' + i + ' de ' + n, W - 14, H - 10, { align: 'right' });
   }
+  if (soloDoc) return doc;
   doc.save('JarabaRescata_Informe_' + m + '.pdf');
 }
 
@@ -2104,6 +2162,7 @@ async function demoApi(action, d) {
     }
     case 'fotoPerrito': return { ok: false };
     case 'enviarInformePerrito': return todo('Informe enviado a ' + d.ids.length + ' padrino(s) (demo)');
+    case 'enviarInformeMensual': return todo('Informe enviado a ' + d.correos.length + ' persona(s) (demo)');
     case 'anularEntrada': case 'anularSalida': {
       const r = (action === 'anularEntrada' ? D.entradas : D.salidas).find(x => x.ID === d.ID);
       r.Estado = 'Anulada'; r.Nota = 'ANULADA: ' + d.motivo;
