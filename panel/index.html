@@ -168,6 +168,14 @@ th.monto{text-align:right}
 .c-gris{background:var(--gris-claro);color:var(--suave)}
 .c-turq{background:var(--turq-claro);color:#17766f}
 .c-petroleo{background:#e2eef1;color:#164B59}
+.lista-perros{border:2px solid var(--borde);border-radius:12px;background:#fffdf8;max-height:230px;overflow-y:auto;padding:6px}
+.lista-perros label{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;margin:0;font-weight:700;cursor:pointer}
+.lista-perros label:hover{background:var(--gris-claro)}
+.lista-perros label:has(input:checked){background:var(--turq-claro);color:#17766f}
+.lista-perros input{width:18px;height:18px;padding:0;flex:none;accent-color:var(--turquesa)}
+.lista-perros small{font-weight:600;color:var(--suave)}
+.lista-perros-cab{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+.lista-perros-cab input{max-width:220px;padding:7px 10px}
 .num-menu{margin-left:auto;background:var(--naranja);color:#fff;border-radius:20px;font-size:.72rem;font-weight:800;padding:1px 8px;line-height:1.5}
 .areas-vol{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
 .dias-vol{display:flex;gap:3px;flex-wrap:wrap}
@@ -972,16 +980,40 @@ function selectPerrito(nombre, sel) {
     ${perros.map(p => `<option value="${esc(p.ID)}" ${p.ID === sel ? 'selected' : ''}>${esc(p.Nombre)}${p.Estado !== 'Disponible' ? ' (' + esc(p.Estado) + ')' : ''}</option>`).join('')}</select>`;
 }
 
+// Un gasto puede ser para varios perritos: PerritoID guarda los ID separados por coma
+const idsPerritos = x => String((x && x.PerritoID) || '').split(',').map(v => v.trim()).filter(Boolean);
+function listaPerritosCheck(sel = []) {
+  const perros = (E.datos.perritos || []).slice().sort((a, b) => a.Nombre.localeCompare(b.Nombre));
+  if (!perros.length) return '<p class="ayuda">Todavía no hay perritos registrados.</p>';
+  return `<div class="lista-perros-cab"><span class="ayuda" id="numPerrosSel">${sel.length ? sel.length + ' seleccionado(s)' : 'Ninguno: gasto general'}</span>
+    ${perros.length > 6 ? `<input placeholder="Buscar perrito…" oninput="const q=this.value.toLowerCase();document.querySelectorAll('#listaPerros label').forEach(l=>l.style.display=l.dataset.n.indexOf(q)>=0?'':'none')">` : ''}</div>
+  <div class="lista-perros" id="listaPerros" onchange="const n=this.querySelectorAll('input:checked').length;$('numPerrosSel').textContent=n?n+' seleccionado(s)':'Ninguno: gasto general'">
+    ${perros.map(p => `<label data-n="${esc(p.Nombre.toLowerCase())}"><input type="checkbox" name="PerritoIDs" value="${esc(p.ID)}" ${sel.indexOf(p.ID) >= 0 ? 'checked' : ''}> ${esc(p.Nombre)}${p.Estado !== 'Disponible' ? ` <small>(${esc(p.Estado)})</small>` : ''}</label>`).join('')}
+  </div>`;
+}
+
 function modalPerritoSalida(id) {
   const x = E.datos.salidas.find(v => v.ID === id); if (!x) return;
-  abrirModal(`<h3>¿Para qué perrito fue este gasto?</h3>
+  abrirModal(`<h3>Editar gasto</h3>
   <p style="margin-bottom:12px">${esc(x.Descripcion)} · <b>${rd(x.Monto)}</b> · ${fechaCorta(x.Fecha)}</p>
   <div class="error-form oculto" id="mErr"></div>
-  <form id="fM"><div class="campo">${selectPerrito('PerritoID', x.PerritoID)}</div>
-  <div class="pie"><button type="button" class="btn btn-sec" onclick="cerrarModal()">Cancelar</button><button class="btn btn-prim"><i class="fa-solid fa-floppy-disk"></i> Guardar</button></div></form>`);
+  <form id="fM">
+    <div class="campo"><label>¿Para qué perrito(s) fue este gasto?</label>${listaPerritosCheck(idsPerritos(x))}
+      <p class="ayuda">Puedes marcar varios. Si el gasto fue para varios perritos, en las cuentas de cada uno se reparte en partes iguales.</p></div>
+    <div class="campo"><label>Número de factura o recibo</label><input name="NumFactura" value="${esc(x.NumFactura || '')}" maxlength="40" placeholder="Ej.: B0100001234"></div>
+    <div class="campo"><label>Foto de la factura (foto o PDF)</label>
+      ${x.Factura ? `<p style="margin-bottom:6px"><a class="enlace" href="${esc(x.Factura)}" target="_blank" rel="noopener"><i class="fa-solid fa-paperclip"></i> Ver la factura actual</a></p>` : ''}
+      <input type="file" name="archivo" accept="image/*,application/pdf">
+      <p class="ayuda">${x.Factura ? 'Si eliges un archivo nuevo, reemplaza al actual.' : 'Si ya tienes la foto, puedes agregarla ahora.'} Las fotos se reducen automáticamente.</p></div>
+    <div class="pie"><button type="button" class="btn btn-sec" onclick="cerrarModal()">Cancelar</button><button class="btn btn-prim"><i class="fa-solid fa-floppy-disk"></i> Guardar</button></div></form>`);
   $('fM').onsubmit = async e => {
     e.preventDefault();
-    try { await accion('asignarPerritoSalida', { ID: id, PerritoID: e.target.PerritoID.value }, 'Gasto actualizado'); cerrarModal(); mostrar(E.vista); } catch (err) { errModal(err.message); }
+    const fd = new FormData(e.target), d = { ID: id, PerritoIDs: fd.getAll('PerritoIDs'), NumFactura: fd.get('NumFactura') || '' };
+    const arch = fd.get('archivo');
+    try {
+      if (arch && arch.size) d.archivo = await prepararArchivo(arch);
+      await accion('asignarPerritoSalida', d, 'Gasto actualizado'); cerrarModal(); mostrar(E.vista);
+    } catch (err) { errModal(err.message); }
   };
 }
 
@@ -992,8 +1024,9 @@ function cuentasPerrito(pid, mes = null) {
   const aportes = activas(E.datos.entradas).filter(e => e.Tipo === 'Apadrinamiento' && deEste(e) && (!mes || e.MesAporte === mes))
     .sort((a, b) => String(a.MesAporte + a.Fecha).localeCompare(String(b.MesAporte + b.Fecha)))
     .map(e => ({ ...e, Modalidad: (apads.find(a => a.ID === e.ColaboradorID) || {}).Modalidad || 'Apadrinamiento' }));
-  const gastos = activas(E.datos.salidas).filter(x => x.PerritoID === pid && (!mes || String(x.Fecha).slice(0, 7) === mes))
-    .sort((a, b) => String(a.Fecha).localeCompare(String(b.Fecha)));
+  const gastos = activas(E.datos.salidas).filter(x => idsPerritos(x).indexOf(pid) >= 0 && (!mes || String(x.Fecha).slice(0, 7) === mes))
+    .sort((a, b) => String(a.Fecha).localeCompare(String(b.Fecha)))
+    .map(x => { const n = idsPerritos(x).length; return n > 1 ? { ...x, Monto: Math.round(Number(x.Monto) / n * 100) / 100, MontoTotal: Number(x.Monto), Compartido: n, Descripcion: x.Descripcion + ' (gasto de ' + rd(x.Monto) + ' compartido entre ' + n + ' perritos)' } : x; });
   return { aportes, gastos, totalAportes: suma(aportes), totalGastos: suma(gastos) };
 }
 
@@ -1452,11 +1485,11 @@ function vSalidas() {
       <button class="btn btn-nar" onclick="modalSalida()"><i class="fa-solid fa-plus"></i> Registrar salida</button></h2>
     ${lista.length ? `<div class="tabla-cont"><table><thead><tr><th>Fecha</th><th>Categoría</th><th>Descripción</th><th>Proveedor</th><th>Método</th><th>Factura</th><th class="monto">Monto</th><th></th></tr></thead><tbody>
     ${lista.map(x => `<tr class="${x.Estado === 'Anulada' ? 'anulada' : ''}"><td>${fechaCorta(x.Fecha)}</td><td><span class="chip c-nar">${esc(x.Categoria)}</span></td>
-      <td><div>${esc(x.Descripcion)}${x.Perrito ? `<br><span class="chip c-turq"><i class="fa-solid fa-dog"></i> ${esc(x.Perrito)}</span>` : ''}</div></td><td>${esc(x.Proveedor)}</td><td>${esc(x.Metodo)}</td>
-      <td>${x.Factura ? `<a class="enlace" href="${esc(x.Factura)}" target="_blank" rel="noopener"><i class="fa-solid fa-paperclip"></i> Ver</a>` : '—'}</td>
+      <td><div>${esc(x.Descripcion)}${x.Perrito ? `<br>${String(x.Perrito).split(',').map(n => `<span class="chip c-turq" style="margin:2px 3px 0 0"><i class="fa-solid fa-dog"></i> ${esc(n.trim())}</span>`).join('')}` : ''}</div></td><td>${esc(x.Proveedor)}</td><td>${esc(x.Metodo)}</td>
+      <td>${x.Factura ? `<a class="enlace" href="${esc(x.Factura)}" target="_blank" rel="noopener"><i class="fa-solid fa-paperclip"></i> Ver</a>` : ''}${x.NumFactura ? `${x.Factura ? '<br>' : ''}<span class="ayuda" style="white-space:nowrap">N.º ${esc(x.NumFactura)}</span>` : ''}${!x.Factura && !x.NumFactura ? '—' : ''}</td>
       <td class="monto" style="color:var(--naranja-osc)">${rd(x.Monto)}</td>
       <td><div class="acc">${x.Nota ? `<button class="btn btn-sec btn-mini" title="${esc(x.Nota)}" onclick="toast(this.title,5000)"><i class="fa-solid fa-note-sticky"></i></button>` : ''}
-        ${x.Estado !== 'Anulada' ? `<button class="btn btn-sec btn-mini" title="${x.Perrito ? 'Cambiar perrito' : 'Asignar a un perrito'}" onclick="modalPerritoSalida('${esc(x.ID)}')"><i class="fa-solid fa-dog"></i></button>` : ''}
+        ${x.Estado !== 'Anulada' ? `<button class="btn btn-sec btn-mini" title="Editar perritos y factura" onclick="modalPerritoSalida('${esc(x.ID)}')"><i class="fa-solid fa-pen"></i></button>` : ''}
         ${admin && x.Estado !== 'Anulada' ? `<button class="btn btn-peligro btn-mini" onclick="modalAnular('Salida','${x.ID}')" title="Anular"><i class="fa-solid fa-ban"></i></button>` : ''}
         ${x.Estado === 'Anulada' ? '<span class="chip c-rojo">Anulada</span>' : ''}</div></td></tr>`).join('')}
     </tbody></table></div>` : '<div class="vacio"><i class="fa-solid fa-arrow-up"></i>No hay salidas registradas en este mes.</div>'}
@@ -1562,9 +1595,10 @@ function modalSalida() {
     <div class="campo col2"><label>Proveedor</label><input name="Proveedor" placeholder="Ej.: Clínica Veterinaria San Francisco"></div>
     <div class="campo"><label>Monto (RD$)</label><input type="number" name="Monto" min="1" step="0.01" required></div>
     <div class="campo"><label>Pagado con</label><select name="Metodo">${opts(METODOS, 'Efectivo')}</select></div>
-    <div class="campo col2"><label>¿Para qué perrito? (opcional)</label>${selectPerrito('PerritoID', '')}
-      <p class="ayuda">Si el gasto fue para un perrito en particular, elígelo: aparecerá en sus cuentas y en el informe para sus padrinos.</p></div>
+    <div class="campo col2"><label>¿Para qué perrito(s)? (opcional)</label>${listaPerritosCheck([])}
+      <p class="ayuda">Marca uno o varios: el gasto aparecerá en sus cuentas y en el informe para sus padrinos. Si marcas varios, se reparte en partes iguales.</p></div>
     ${campoArchivo('Factura o recibo')}
+    <div class="campo col2"><label>Número de factura o recibo (si no tienes foto)</label><input name="NumFactura" maxlength="40" placeholder="Ej.: B0100001234"></div>
     <div class="campo col2"><label>Nota</label><textarea name="Nota"></textarea></div>
   </div>
   <div class="pie"><button type="button" class="btn btn-sec" onclick="cerrarModal()">Cancelar</button><button class="btn btn-prim"><i class="fa-solid fa-floppy-disk"></i> Guardar salida</button></div></form>`);
@@ -1574,6 +1608,7 @@ function modalSalida() {
 async function enviarMovimiento(e, act, ok) {
   e.preventDefault();
   const fd = new FormData(e.target), d = Object.fromEntries(fd); delete d.archivo;
+  if (fd.has('PerritoIDs') || act === 'registrarSalida') { d.PerritoIDs = fd.getAll('PerritoIDs'); delete d.PerritoID; }
   const op = $('mColab') && $('mColab').selectedOptions[0];
   if (op && op.dataset.nombre) d.ColaboradorNombre = op.dataset.nombre;
   const arch = fd.get('archivo');
@@ -2062,10 +2097,10 @@ async function demoApi(action, d) {
       return todo('Recordatorio enviado a ' + c.Correo + ' (demo)');
     }
     case 'registrarSalida':
-      D.salidas.push({ ...d, ID: id('S'), Monto: +d.Monto, Factura: d.archivo ? '#' : '', Estado: 'Activa', FechaRegistro: D.hoy + ' 23:59', Perrito: ((D.perritos.find(x => x.ID === d.PerritoID) || {}).Nombre) || '' }); return todo();
+      D.salidas.push({ ...d, ID: id('S'), Monto: +d.Monto, Factura: d.archivo ? '#' : '', Estado: 'Activa', FechaRegistro: D.hoy + ' 23:59', PerritoID: (d.PerritoIDs || []).join(','), Perrito: (d.PerritoIDs || []).map(i => (D.perritos.find(x => x.ID === i) || {}).Nombre).filter(Boolean).join(', ') }); return todo();
     case 'asignarPerritoSalida': {
-      const sa = D.salidas.find(x => x.ID === d.ID), pe = D.perritos.find(x => x.ID === d.PerritoID);
-      Object.assign(sa, { PerritoID: pe ? pe.ID : '', Perrito: pe ? pe.Nombre : '' }); return todo();
+      const sa = D.salidas.find(x => x.ID === d.ID), ids = d.PerritoIDs || [];
+      Object.assign(sa, { PerritoID: ids.join(','), Perrito: ids.map(i => (D.perritos.find(x => x.ID === i) || {}).Nombre).filter(Boolean).join(', '), NumFactura: d.NumFactura, Factura: d.archivo ? '#' : sa.Factura }); return todo();
     }
     case 'fotoPerrito': return { ok: false };
     case 'enviarInformePerrito': return todo('Informe enviado a ' + d.ids.length + ' padrino(s) (demo)');
