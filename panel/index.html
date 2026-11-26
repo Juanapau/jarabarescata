@@ -851,7 +851,7 @@ function modalVoluntario(id) {
     <div class="campo"><label>Transporte</label><select name="transporte">${opts(['', 'Carro', 'Motor', 'No tengo'], v ? v.Transporte : '')}</select></div>
     <div class="campo"><label>Experiencia con perros</label><textarea name="experiencia" rows="2" maxlength="600">${esc(v ? v.Experiencia : '')}</textarea></div>
     <div class="campo"><label>Por qué quiere ser voluntario/a</label><textarea name="motivo" rows="2" maxlength="1000">${esc(v ? v.Motivo : '')}</textarea></div>`;
-  const msg = v ? encodeURIComponent('Hola ' + String(v.Nombre).split(' ')[0] + ', te escribimos de JarabaRescata por tu inscripción como voluntario/a 🐾') : '';
+  const msg = v ? encodeURIComponent('Hola ' + String(v.Nombre).split(' ')[0] + ', te escribimos de JarabaRescata por tu inscripción como voluntario/a. Te agradecemos infinitamente tu disposición para ayudarnos. Nos mantendremos en contacto y más adelante coordinaremos un encuentro para conocernos. 🐾') : '';
   abrirModal((v ? `
   <h3 style="margin:0;color:#164B59"><i class="fa-solid fa-hands-holding-circle"></i> ${esc(v.Nombre)}</h3>
   <p class="ayuda" style="margin-bottom:12px">Inscrito/a el ${fechaCorta(v.FechaRegistro)} · <span class="chip ${CHIP_VOL[v.Estado] || 'c-gris'}">${esc(v.Estado)}</span></p>
